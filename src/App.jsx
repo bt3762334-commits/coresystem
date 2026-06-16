@@ -40,6 +40,8 @@ export default function App() {
 }
 
 function AuthenticatedApp({ session, setSession, tab, setTab }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+
   const [tasks,        setTasks]        = useStorage("cs_tasks",        EMPTY_TASKS,                            session);
   const [streak,       setStreak]       = useStorage("cs_streak",       { count: 0, lastDate: null, history: {} }, session);
   const [reflections,  setReflections]  = useStorage("cs_reflections",  {},                                     session);
@@ -105,9 +107,20 @@ function AuthenticatedApp({ session, setSession, tab, setTab }) {
     setSession(null);
   }
 
+  function handleNavClick(id) {
+    setTab(id);
+    setMenuOpen(false);
+  }
+
   const allTasks  = useMemo(() => flatTasks(tasks), [tasks]);
   const doneCount = allTasks.filter((t) => t.done).length;
   const total     = allTasks.length;
+
+  const stats = [
+    { icon: "🔥", val: streak.count + " يوم" },
+    { icon: "✅", val: doneCount + "/" + total },
+    { icon: "⚡", val: activeCT.count + " اليوم" },
+  ];
 
   return (
     <div style={{ minHeight: "100vh", position: "relative" }}>
@@ -120,11 +133,13 @@ function AuthenticatedApp({ session, setSession, tab, setTab }) {
         boxShadow: "0 4px 32px rgba(108,99,255,.5)",
       }}>
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 1.25rem" }}>
+
           {/* Top row */}
           <div className="app-top" style={{
             display: "flex", alignItems: "center", justifyContent: "space-between",
             height: 68, gap: 12,
           }}>
+            {/* Logo */}
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <div style={{
                 width: 42, height: 42, borderRadius: 13,
@@ -138,14 +153,11 @@ function AuthenticatedApp({ session, setSession, tab, setTab }) {
               </div>
             </div>
 
-            <div className="app-pills" style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+            {/* Desktop: pills + user */}
+            <div className="app-pills-desktop" style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
               <DailyQuote compact />
-              {[
-                { icon: "🔥", val: streak.count + " يوم" },
-                { icon: "✅", val: doneCount + "/" + total },
-                { icon: "⚡", val: activeCT.count + " اليوم" },
-              ].map((s, i) => (
-                <span key={i} className="pill" style={{
+              {stats.map((s, i) => (
+                <span key={i} style={{
                   background: "rgba(255,255,255,.15)",
                   border: "1px solid rgba(255,255,255,.25)",
                   borderRadius: 20, padding: "4px 12px",
@@ -154,8 +166,7 @@ function AuthenticatedApp({ session, setSession, tab, setTab }) {
                   {s.icon} <strong>{s.val}</strong>
                 </span>
               ))}
-
-              <div className="user-block" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <div style={{
                   width: 36, height: 36, borderRadius: "50%",
                   background: "rgba(255,255,255,.25)",
@@ -164,9 +175,7 @@ function AuthenticatedApp({ session, setSession, tab, setTab }) {
                   color: "#fff", fontSize: 15, fontWeight: 700,
                 }}>{session.avatar}</div>
                 <div style={{ display: "flex", flexDirection: "column" }}>
-                  <span className="user-name" style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>
-                    {session.name}
-                  </span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{session.name}</span>
                   <button onClick={handleLogout} style={{
                     background: "none", border: "none", padding: 0,
                     fontSize: 10, color: "rgba(255,255,255,.7)",
@@ -175,12 +184,44 @@ function AuthenticatedApp({ session, setSession, tab, setTab }) {
                 </div>
               </div>
             </div>
+
+            {/* Mobile: avatar + hamburger */}
+            <div className="app-mobile-right" style={{ display: "none", alignItems: "center", gap: 8 }}>
+              <div style={{
+                width: 32, height: 32, borderRadius: "50%",
+                background: "rgba(255,255,255,.25)",
+                border: "2px solid rgba(255,255,255,.5)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                color: "#fff", fontSize: 13, fontWeight: 700, flexShrink: 0,
+              }}>{session.avatar}</div>
+              <button
+                onClick={() => setMenuOpen((p) => !p)}
+                style={{
+                  background: "rgba(255,255,255,.15)",
+                  border: "1px solid rgba(255,255,255,.3)",
+                  borderRadius: 10, width: 38, height: 38,
+                  display: "flex", flexDirection: "column",
+                  alignItems: "center", justifyContent: "center", gap: 5,
+                  cursor: "pointer",
+                }}
+              >
+                {menuOpen ? (
+                  <span style={{ color: "#fff", fontSize: 20, lineHeight: 1 }}>✕</span>
+                ) : (
+                  <>
+                    <span style={{ display: "block", width: 18, height: 2, background: "#fff", borderRadius: 2 }} />
+                    <span style={{ display: "block", width: 18, height: 2, background: "#fff", borderRadius: 2 }} />
+                    <span style={{ display: "block", width: 18, height: 2, background: "#fff", borderRadius: 2 }} />
+                  </>
+                )}
+              </button>
+            </div>
           </div>
 
-          {/* Nav tabs */}
-          <nav className="app-nav" style={{ display: "flex", gap: 2, overflowX: "auto" }}>
+          {/* Desktop nav tabs */}
+          <nav className="app-nav-desktop" style={{ display: "flex", gap: 2, overflowX: "auto" }}>
             {NAV.map((n) => (
-              <button key={n.id} onClick={() => setTab(n.id)} style={{
+              <button key={n.id} onClick={() => handleNavClick(n.id)} style={{
                 padding: "10px 18px", border: "none",
                 background: tab === n.id ? "rgba(255,255,255,.2)" : "transparent",
                 fontSize: 13, fontWeight: tab === n.id ? 700 : 400,
@@ -188,14 +229,78 @@ function AuthenticatedApp({ session, setSession, tab, setTab }) {
                 borderRadius: tab === n.id ? "10px 10px 0 0" : 0,
                 borderBottom: tab === n.id ? "2.5px solid #fff" : "2.5px solid transparent",
                 display: "flex", alignItems: "center", gap: 6,
-                whiteSpace: "nowrap", flexShrink: 0,
+                whiteSpace: "nowrap", flexShrink: 0, cursor: "pointer",
               }}>
                 <span>{n.icon}</span> {n.label}
               </button>
             ))}
           </nav>
         </div>
+
+        {/* Mobile dropdown menu */}
+        {menuOpen && (
+          <div className="app-mobile-menu" style={{
+            background: "rgba(53,40,200,.97)",
+            borderTop: "1px solid rgba(255,255,255,.15)",
+            padding: "12px 16px 16px",
+          }}>
+            {/* Stats */}
+            <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
+              {stats.map((s, i) => (
+                <span key={i} style={{
+                  background: "rgba(255,255,255,.12)",
+                  border: "1px solid rgba(255,255,255,.2)",
+                  borderRadius: 16, padding: "5px 12px",
+                  fontSize: 12, color: "#fff",
+                }}>{s.icon} <strong>{s.val}</strong></span>
+              ))}
+            </div>
+
+            {/* Nav items */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              {NAV.map((n) => (
+                <button key={n.id} onClick={() => handleNavClick(n.id)} style={{
+                  padding: "11px 14px", borderRadius: 10, border: "none",
+                  background: tab === n.id ? "rgba(255,255,255,.2)" : "rgba(255,255,255,.06)",
+                  color: "#fff", fontSize: 14, fontWeight: tab === n.id ? 700 : 400,
+                  display: "flex", alignItems: "center", gap: 10,
+                  textAlign: "right", cursor: "pointer",
+                  borderRight: tab === n.id ? "3px solid #fff" : "3px solid transparent",
+                }}>
+                  <span style={{ fontSize: 18 }}>{n.icon}</span>
+                  <span>{n.label}</span>
+                  {tab === n.id && (
+                    <span style={{ marginRight: "auto", fontSize: 11, opacity: .7 }}>● الآن</span>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {/* Logout */}
+            <button onClick={handleLogout} style={{
+              marginTop: 12, width: "100%", padding: "10px 14px", borderRadius: 10,
+              border: "1px solid rgba(255,255,255,.2)",
+              background: "rgba(239,68,68,.15)",
+              color: "#FCA5A5", fontSize: 13, fontWeight: 600,
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+              cursor: "pointer",
+            }}>
+              🚪 تسجيل خروج — {session.name}
+            </button>
+          </div>
+        )}
       </header>
+
+      {/* Overlay to close menu */}
+      {menuOpen && (
+        <div
+          onClick={() => setMenuOpen(false)}
+          style={{
+            position: "fixed", inset: 0, zIndex: 49,
+            background: "rgba(0,0,0,.4)",
+          }}
+        />
+      )}
 
       <main style={{
         position: "relative", zIndex: 1,
@@ -211,27 +316,25 @@ function AuthenticatedApp({ session, setSession, tab, setTab }) {
         </div>
       </main>
 
-      {/* Mobile responsive styles */}
       <style>{`
         @media (max-width: 720px) {
-          .app-top { height: 60px !important; gap: 8px !important; }
-          .app-pills { gap: 4px !important; }
-          .app-pills .pill { display: none !important; }
-          .app-nav { padding-bottom: 2px; }
-          .app-nav button {
-            padding: 8px 12px !important;
-            font-size: 12px !important;
-          }
-          .user-block .user-name { display: none !important; }
-          .matrix-grid {
-            grid-template-columns: 1fr !important;
-            grid-template-rows: auto auto auto auto auto !important;
-          }
+          .app-pills-desktop { display: none !important; }
+          .app-nav-desktop   { display: none !important; }
+          .app-mobile-right  { display: flex !important; }
+        }
+        @media (min-width: 721px) {
+          .app-mobile-menu  { display: none !important; }
+          .app-mobile-right { display: none !important; }
+        }
+        @media (max-width: 480px) {
+          main { padding: 1rem .75rem !important; }
+        }
+        .matrix-grid {
+          grid-template-columns: 1fr !important;
+        }
+        @media (max-width: 720px) {
           .matrix-grid > div { grid-column: 1 !important; grid-row: auto !important; }
-          .matrix-grid > div:nth-child(1) { grid-row: 1 !important; }
-          .matrix-grid > div:nth-child(2) { grid-row: 2 !important; }
-          .matrix-grid > div:nth-child(3) { 
-            grid-row: 3 !important; 
+          .matrix-grid > div:nth-child(3) {
             writing-mode: horizontal-tb !important;
             transform: none !important;
             border-inline-end: none !important;
@@ -239,9 +342,6 @@ function AuthenticatedApp({ session, setSession, tab, setTab }) {
             padding-inline-end: 0 !important;
             padding: 8px 0;
           }
-        }
-        @media (max-width: 480px) {
-          main { padding: 1rem .75rem !important; }
         }
       `}</style>
     </div>
