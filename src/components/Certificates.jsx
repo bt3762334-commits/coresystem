@@ -1,333 +1,658 @@
-import { useState, useRef } from "react";
-import { flatTasks, todayAr } from "../utils/helpers";
+import { useState, useMemo } from "react";
+import { flatTasks, today, monthKey } from "../utils/helpers";
 
-// ── cert types ──────────────────────────────────────────────────────────────
-const CERT_TYPES = [
+// ─── Certificate Templates ───────────────────────────────
+const TEMPLATES = [
   {
-    id: "productivity",
-    label: "شهادة الإنتاجية",
-    icon: "⚡",
-    gradient: ["#7C6EFF", "#4338CA"],
-    glow: "rgba(124,110,255,.6)",
-    accent: "#A89BFF",
-    tag: "PRODUCTIVITY MASTER",
-    minDone: 5,
+    id: "first10",
+    title: "First Steps",
+    subtitle: "بداية الطريق",
+    description: "for successfully completing your first 10 tasks and laying the foundation of your productive journey.",
+    icon: "🌟",
+    required: 10,
+    color: "#7C6EFF",
+    color2: "#10D98A",
   },
   {
-    id: "streak",
-    label: "شهادة المثابرة",
-    icon: "🔥",
-    gradient: ["#F59E0B", "#DC2626"],
-    glow: "rgba(245,158,11,.6)",
-    accent: "#FCD34D",
-    tag: "CONSISTENCY CHAMPION",
-    minStreak: 3,
+    id: "first50",
+    title: "Half-Century Achiever",
+    subtitle: "إنجاز الـ 50",
+    description: "for reaching 50 completed tasks — a milestone that reflects your commitment and discipline.",
+    icon: "🥉",
+    required: 50,
+    color: "#7C6EFF",
+    color2: "#10D98A",
   },
   {
-    id: "mastery",
-    label: "شهادة التميز",
-    icon: "🏆",
-    gradient: ["#10D98A", "#065F46"],
-    glow: "rgba(16,217,138,.6)",
-    accent: "#5EFFC7",
-    tag: "CORE SYSTEM ELITE",
-    minDone: 10,
+    id: "first100",
+    title: "Century Master",
+    subtitle: "سيد الـ 100",
+    description: "for completing 100 tasks. This achievement reflects your dedication to personal growth and consistency.",
+    icon: "🥈",
+    required: 100,
+    color: "#7C6EFF",
+    color2: "#10D98A",
+  },
+  {
+    id: "monthly",
+    title: "Monthly Excellence",
+    subtitle: "تميز شهري",
+    description: "for achieving 30 tasks within a single month — proving that consistency builds greatness.",
+    icon: "📅",
+    required: 30,
+    color: "#7C6EFF",
+    color2: "#10D98A",
+    monthly: true,
   },
 ];
 
-function genCertId() {
-  const ts  = Date.now().toString(36).toUpperCase();
-  const rnd = Math.random().toString(36).slice(2, 6).toUpperCase();
-  return `CS-${ts}-${rnd}`;
+function getMonthDoneCount(history, yearMonth) {
+  if (!history) return 0;
+  return Object.entries(history)
+    .filter(([date]) => date.startsWith(yearMonth))
+    .reduce((sum, [, count]) => sum + (count || 0), 0);
 }
 
-function CertPreview({ name, cert, stats, certId, date }) {
-  const [c1, c2] = cert.gradient;
+function getLifetimeDone(tasks) {
+  return flatTasks(tasks).filter((t) => t.done).length;
+}
 
-  const quads = [
-    { label: "Q1 عاجل ومهم",    done: stats.q1done, total: stats.q1total, color: "#F87171" },
-    { label: "Q2 مهم مش عاجل", done: stats.q2done, total: stats.q2total, color: "#60A5FA" },
-    { label: "Q3 عاجل مش مهم", done: stats.q3done, total: stats.q3total, color: "#FBBF24" },
-    { label: "Q4 مش عاجل",     done: stats.q4done, total: stats.q4total, color: "#34D399" },
-  ];
+function getEarnedIds(templates, tasks, streak) {
+  const earned = new Set();
+  const history = streak?.history || {};
+  const lifetime = getLifetimeDone(tasks);
+
+  templates.forEach((tpl) => {
+    if (tpl.monthly) {
+      const now = new Date();
+      const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const nowKey = monthKey();
+      const prevKey = `${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, "0")}`;
+      if (getMonthDoneCount(history, nowKey) >= tpl.required) earned.add(tpl.id);
+      else if (getMonthDoneCount(history, prevKey) >= tpl.required) earned.add(tpl.id);
+    } else {
+      if (lifetime >= tpl.required) earned.add(tpl.id);
+    }
+  });
+  return earned;
+}
+
+export default function Certificates({ session, tasks, streak, certificates, onIssue }) {
+  const [previewing, setPreviewing] = useState(null);
+  const [issued, setIssued] = useState(new Set((certificates || []).map(c => c.templateId)));
+
+  const lifetime = getLifetimeDone(tasks);
+  const currentMonth = monthKey();
+  const monthDone = getMonthDoneCount(streak?.history || {}, currentMonth);
+
+  const earnedIds = getEarnedIds(TEMPLATES, tasks, streak);
+
+  function handleIssue(tpl) {
+    if (!earnedIds.has(tpl.id) || issued.has(tpl.id)) return;
+    const cert = {
+      id: "cert_" + Date.now().toString(36),
+      templateId: tpl.id,
+      title: tpl.title,
+      subtitle: tpl.subtitle,
+      description: tpl.description,
+      icon: tpl.icon,
+      color: tpl.color,
+      color2: tpl.color2,
+      userName: session.name,
+      issuedAt: Date.now(),
+      date: today(),
+      stats: tpl.monthly
+        ? { monthDone, month: currentMonth, total: tpl.required }
+        : { lifetime, total: tpl.required },
+    };
+    onIssue(cert);
+    setIssued((p) => new Set([...p, tpl.id]));
+  }
 
   return (
-    <div
-      id="cert-canvas"
-      style={{
-        width: 900, height: 636,
-        background: "linear-gradient(135deg, #0D0B1E 0%, #110F26 40%, #0A1628 100%)",
-        borderRadius: 24,
-        position: "relative",
-        overflow: "hidden",
-        fontFamily: "Cairo, sans-serif",
-        direction: "rtl",
-        flexShrink: 0,
-      }}
-    >
-      {/* bg blobs */}
-      <div style={{ position:"absolute", top:-100, right:-100, width:420, height:420, borderRadius:"50%", background:`radial-gradient(circle, ${cert.glow} 0%, transparent 65%)`, opacity:.3, pointerEvents:"none" }} />
-      <div style={{ position:"absolute", bottom:-120, left:-80,  width:380, height:380, borderRadius:"50%", background:"radial-gradient(circle, rgba(16,217,138,.28) 0%, transparent 65%)", opacity:.3, pointerEvents:"none" }} />
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
 
-      {/* borders */}
-      <div style={{ position:"absolute", inset:10, borderRadius:18, border:`1px solid ${cert.accent}33`, pointerEvents:"none" }} />
-      <div style={{ position:"absolute", inset:15, borderRadius:15, border:`0.5px solid ${cert.accent}16`, pointerEvents:"none" }} />
+      {/* Hero */}
+      <div className="divine-card" style={{
+        padding: "28px 32px",
+        color: "#fff",
+        position: "relative", overflow: "hidden",
+      }}>
+        <div style={{
+          position: "absolute", inset: 0, opacity: .12,
+          backgroundImage: "radial-gradient(circle at 20% 20%, #7C6EFF 0%, transparent 50%), radial-gradient(circle at 80% 80%, #10D98A 0%, transparent 50%)",
+        }} />
+        <div style={{ position: "relative" }}>
+          <div style={{ fontSize: 12, opacity: .85, marginBottom: 6, letterSpacing: ".15em", textTransform: "uppercase", fontWeight: 700 }}>
+            🎓 My Certificates
+          </div>
+          <div style={{ fontSize: 26, fontWeight: 800, marginBottom: 6, fontFamily: "Georgia, serif" }}>
+            Earn your achievements
+          </div>
+          <p style={{ fontSize: 13, opacity: .8, maxWidth: 560, lineHeight: 1.6 }}>
+            Each milestone unlocks a DarkByte-signed certificate, verified and personalized with your name.
+          </p>
 
-      {/* corner diamonds */}
-      {[{top:10,right:10},{top:10,left:10},{bottom:10,right:10},{bottom:10,left:10}].map((pos,i)=>(
-        <div key={i} style={{ position:"absolute", ...pos, width:14, height:14, background:`linear-gradient(135deg, ${c1}, ${cert.accent})`, borderRadius:3, opacity:.8, transform:"rotate(45deg)" }} />
-      ))}
-
-      {/* left accent strip */}
-      <div style={{ position:"absolute", left:0, top:0, bottom:0, width:6, background:`linear-gradient(180deg, ${c1}, ${c2}, ${cert.accent})` }} />
-
-      {/* top tag */}
-      <div style={{ position:"absolute", top:0, left:6, right:0, height:36, background:`linear-gradient(90deg, ${c1}20, transparent)`, display:"flex", alignItems:"center", padding:"0 22px" }}>
-        <span style={{ fontSize:9, fontWeight:700, color:cert.accent, letterSpacing:".15em", opacity:.85 }}>
-          CORE SYSTEM · AI PRODUCTIVITY OS · {cert.tag}
-        </span>
+          <div style={{ display: "flex", gap: 28, marginTop: 18, flexWrap: "wrap" }}>
+            <div>
+              <div style={{ fontSize: 26, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{lifetime}</div>
+              <div style={{ fontSize: 11, opacity: .8 }}>tasks done</div>
+            </div>
+            <div>
+              <div style={{ fontSize: 26, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{monthDone}</div>
+              <div style={{ fontSize: 11, opacity: .8 }}>this month</div>
+            </div>
+            <div>
+              <div style={{ fontSize: 26, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{issued.size}</div>
+              <div style={{ fontSize: 11, opacity: .8 }}>certificates earned</div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* main content */}
-      <div style={{ position:"relative", zIndex:1, padding:"46px 38px 22px 44px", height:"100%", display:"flex", flexDirection:"column" }}>
+      {/* Templates grid */}
+      <div>
+        <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 12, color: "var(--text)", letterSpacing: ".04em" }}>
+          🏅 AVAILABLE CERTIFICATES
+        </h3>
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+          gap: 14,
+        }}>
+          {TEMPLATES.map((tpl) => {
+            const current = tpl.monthly ? monthDone : lifetime;
+            const pct = Math.min(100, (current / tpl.required) * 100);
+            const earned = earnedIds.has(tpl.id);
+            const alreadyIssued = issued.has(tpl.id);
 
-        {/* header */}
-        <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:18 }}>
-          <div>
-            <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:6 }}>
-              <div style={{ width:44, height:44, borderRadius:13, background:`linear-gradient(135deg, ${c1}, ${c2})`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:22, boxShadow:`0 0 20px ${cert.glow}` }}>
-                {cert.icon}
-              </div>
-              <div>
-                <div style={{ fontSize:10, color:cert.accent, fontWeight:700, letterSpacing:".1em" }}>شـهـادة تـقـديـر رسـمـيـة</div>
-                <div style={{ fontSize:22, fontWeight:900, color:"#fff" }}>{cert.label}</div>
-              </div>
-            </div>
-            <div style={{ fontSize:10.5, color:"#3E3B70" }}>تُقدَّم تقديراً للجهد والمثابرة في إدارة الوقت والإنتاجية</div>
-          </div>
-
-          {/* DarkByte stamp */}
-          <div style={{ width:86, height:86, borderRadius:"50%", border:`2.5px solid ${cert.accent}`, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", background:`${c1}18`, boxShadow:`0 0 28px ${cert.glow}, inset 0 0 18px ${c1}12`, flexShrink:0 }}>
-            <div style={{ fontSize:7, fontWeight:800, color:cert.accent, letterSpacing:".08em", textAlign:"center", lineHeight:1.9 }}>◈ DARKBYTE ◈</div>
-            <div style={{ fontSize:17, color:cert.accent, fontWeight:900, lineHeight:1 }}>✓</div>
-            <div style={{ fontSize:6.5, color:cert.accent, letterSpacing:".1em", fontWeight:700 }}>CERTIFIED</div>
-          </div>
-        </div>
-
-        {/* recipient */}
-        <div style={{ padding:"12px 20px", marginBottom:16, background:`linear-gradient(90deg, ${c1}20, ${c2}10)`, border:`1px solid ${cert.accent}28`, borderRadius:13, display:"flex", alignItems:"center", gap:14 }}>
-          <div style={{ fontSize:10, color:"#6B67A0", whiteSpace:"nowrap" }}>تُمنح إلى</div>
-          <div style={{ width:1, height:28, background:`${cert.accent}40` }} />
-          <div style={{ fontSize:26, fontWeight:900, background:`linear-gradient(90deg, #fff, ${cert.accent})`, WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text", lineHeight:1.2 }}>
-            {name || "— اسم المستخدم —"}
-          </div>
-        </div>
-
-        {/* quad stats */}
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr 1fr", gap:9, marginBottom:13 }}>
-          {quads.map((q,i) => {
-            const pct = q.total > 0 ? Math.round((q.done/q.total)*100) : 0;
             return (
-              <div key={i} style={{ padding:"9px 11px", borderRadius:11, background:"rgba(255,255,255,.04)", border:`1px solid ${q.color}28` }}>
-                <div style={{ fontSize:8.5, color:q.color, fontWeight:700, marginBottom:3, letterSpacing:".04em" }}>{q.label}</div>
-                <div style={{ fontSize:20, fontWeight:900, color:"#fff", lineHeight:1 }}>{q.done}</div>
-                <div style={{ fontSize:8.5, color:"#3E3B70" }}>من {q.total} مهمة</div>
-                <div style={{ marginTop:5, height:3, borderRadius:3, background:"rgba(255,255,255,.07)" }}>
-                  <div style={{ height:3, borderRadius:3, width:`${pct}%`, background:`linear-gradient(90deg, ${q.color}, ${q.color}88)` }} />
+              <div key={tpl.id} className="slide-up" style={{
+                background: "var(--surface)",
+                border: `1px solid ${earned ? tpl.color + "66" : "var(--border)"}`,
+                borderRadius: "var(--radius)",
+                padding: 18,
+                boxShadow: earned ? "var(--shadow-md)" : "var(--shadow)",
+                position: "relative",
+                overflow: "hidden",
+              }}>
+                {earned && (
+                  <div style={{
+                    position: "absolute", top: 12, left: 12,
+                    fontSize: 10, fontWeight: 800, color: "#fff",
+                    background: `linear-gradient(135deg, ${tpl.color}, ${tpl.color2})`,
+                    padding: "3px 10px", borderRadius: 20,
+                    letterSpacing: ".08em",
+                  }}>✓ QUALIFIED</div>
+                )}
+
+                <div style={{ fontSize: 36, marginBottom: 8, filter: earned ? "none" : "grayscale(0.4) opacity(0.7)" }}>
+                  {tpl.icon}
                 </div>
-                <div style={{ fontSize:8.5, color:q.color, marginTop:2, fontWeight:600 }}>{pct}%</div>
+                <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 2, color: "var(--text)" }}>
+                  {tpl.subtitle}
+                </div>
+                <div style={{
+                  fontSize: 10, color: tpl.color, fontWeight: 700,
+                  marginBottom: 8, letterSpacing: ".12em",
+                  textTransform: "uppercase",
+                }}>
+                  {tpl.title}
+                </div>
+                <p style={{
+                  fontSize: 11, color: "var(--text-2)",
+                  lineHeight: 1.55, margin: "0 0 14px",
+                }}>
+                  {tpl.description}
+                </p>
+
+                <div style={{ marginBottom: 12 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 4 }}>
+                    <span style={{ color: "var(--text-2)" }}>
+                      {current} / {tpl.required} {tpl.monthly ? "tasks/month" : "tasks"}
+                    </span>
+                    <span style={{ color: tpl.color, fontWeight: 800 }}>{Math.round(pct)}%</span>
+                  </div>
+                  <div style={{
+                    height: 6, background: "var(--bg)",
+                    borderRadius: 3, overflow: "hidden", border: "1px solid var(--border)",
+                  }}>
+                    <div style={{
+                      height: "100%",
+                      width: pct + "%",
+                      background: `linear-gradient(90deg, ${tpl.color}, ${tpl.color2})`,
+                      borderRadius: 3,
+                      transition: "width .6s ease",
+                      boxShadow: earned ? `0 0 12px ${tpl.color}88` : "none",
+                    }} />
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", gap: 6 }}>
+                  <button
+                    onClick={() => setPreviewing({ tpl, earned })}
+                    style={{
+                      flex: 1, padding: "9px 12px",
+                      borderRadius: "var(--radius-sm)",
+                      border: "1px solid var(--border)",
+                      background: "var(--bg)",
+                      color: "var(--text)", fontSize: 12, fontWeight: 600,
+                    }}
+                  >👁 Preview</button>
+                  <button
+                    onClick={() => handleIssue(tpl)}
+                    disabled={!earned || alreadyIssued}
+                    style={{
+                      flex: 1, padding: "9px 12px",
+                      borderRadius: "var(--radius-sm)",
+                      border: "none",
+                      background: !earned || alreadyIssued
+                        ? "var(--border-2)"
+                        : `linear-gradient(135deg, ${tpl.color}, ${tpl.color2})`,
+                      color: !earned || alreadyIssued ? "var(--text-2)" : "#fff",
+                      fontSize: 12, fontWeight: 700,
+                      boxShadow: !earned || alreadyIssued ? "none" : `0 4px 14px ${tpl.color}55`,
+                    }}
+                  >
+                    {alreadyIssued ? "✓ Earned" : "🎁 Claim"}
+                  </button>
+                </div>
               </div>
             );
           })}
         </div>
-
-        {/* summary */}
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:9, marginBottom:16 }}>
-          {[
-            { label:"إجمالي المُنجز", val:`${stats.doneTotal} / ${stats.total}`, icon:"✅", color:"#A89BFF" },
-            { label:"Streak الحالي",  val:`${stats.streak} يوم 🔥`,              icon:"📅", color:cert.accent },
-            { label:"نسبة الإنجاز",   val:`${stats.total>0?Math.round(stats.doneTotal/stats.total*100):0}%`, icon:"📊", color:"#10D98A" },
-          ].map((s,i)=>(
-            <div key={i} style={{ padding:"9px 13px", borderRadius:11, background:"rgba(255,255,255,.04)", border:"1px solid rgba(255,255,255,.06)", display:"flex", alignItems:"center", gap:9 }}>
-              <span style={{ fontSize:17 }}>{s.icon}</span>
-              <div>
-                <div style={{ fontSize:8.5, color:"#3E3B70", marginBottom:1 }}>{s.label}</div>
-                <div style={{ fontSize:13, fontWeight:800, color:s.color }}>{s.val}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* footer */}
-        <div style={{ marginTop:"auto", display:"flex", alignItems:"flex-end", justifyContent:"space-between", borderTop:`1px solid ${cert.accent}18`, paddingTop:12 }}>
-          <div>
-            <div style={{ fontSize:9.5, color:cert.accent, fontWeight:700, marginBottom:2 }}>📅 تاريخ الإصدار</div>
-            <div style={{ fontSize:11.5, color:"#EAE8FF", fontWeight:600 }}>{date}</div>
-            <div style={{ fontSize:8.5, color:"#2A274C", fontFamily:"monospace", marginTop:2 }}>ID: {certId}</div>
-          </div>
-          <div style={{ textAlign:"center" }}>
-            <div style={{ fontFamily:"Georgia, serif", fontSize:25, fontStyle:"italic", fontWeight:700, background:`linear-gradient(135deg, ${c1}, ${cert.accent})`, WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text", letterSpacing:3, lineHeight:1 }}>DarkByte</div>
-            <div style={{ width:115, height:1.5, background:`linear-gradient(90deg, transparent, ${cert.accent}, transparent)`, margin:"5px auto" }} />
-            <div style={{ fontSize:8.5, color:"#3E3B70", letterSpacing:".09em" }}>التوقيع الرقمي المعتمد</div>
-          </div>
-          <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-            <div style={{ width:34, height:34, borderRadius:10, background:`linear-gradient(135deg, ${c1}, ${c2})`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:17, boxShadow:`0 4px 14px ${cert.glow}` }}>⊞</div>
-            <div>
-              <div style={{ fontSize:12, fontWeight:900, color:"#fff" }}>CORE SYSTEM</div>
-              <div style={{ fontSize:8, color:"#3E3B70", letterSpacing:".06em" }}>AI PRODUCTIVITY OS</div>
-            </div>
-          </div>
-        </div>
       </div>
+
+      {/* Earned certs wall */}
+      {certificates && certificates.length > 0 && (
+        <div>
+          <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 12, color: "var(--text)", letterSpacing: ".04em" }}>
+            🏆 MY CERTIFICATES ({certificates.length})
+          </h3>
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+            gap: 14,
+          }}>
+            {certificates.map((cert) => (
+              <CertificateCard key={cert.id} cert={cert} onView={() => setPreviewing({ cert, earned: true })} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {previewing && (
+        <CertificateModal
+          data={previewing.cert || { ...previewing.tpl, userName: session.name, date: today(), issuedAt: null }}
+          issuedAt={previewing.cert?.issuedAt}
+          onClose={() => setPreviewing(null)}
+        />
+      )}
     </div>
   );
 }
 
-export default function Certificates({ session, tasks, streak, completedToday, certificates, onIssue }) {
-  const [userName, setUserName] = useState(session?.name || "");
-  const [certType, setCertType] = useState("productivity");
-  const [issued,   setIssued]   = useState(false);
-  const [dl,       setDL]       = useState(false);
-  const certIdRef = useRef(genCertId());
+function CertificateCard({ cert, onView }) {
+  return (
+    <button onClick={onView} className="slide-up" style={{
+      background: "var(--surface)",
+      border: "1px solid var(--border)",
+      borderRadius: "var(--radius)",
+      padding: 0, textAlign: "start",
+      overflow: "hidden", boxShadow: "var(--shadow)",
+      cursor: "pointer", position: "relative",
+    }}>
+      <div style={{
+        height: 140,
+        background: `linear-gradient(135deg, #0D0B1E 0%, #1A1740 50%, #110F26 100%)`,
+        borderBottom: `2px solid ${cert.color || "#7C6EFF"}55`,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        position: "relative", overflow: "hidden",
+      }}>
+        <div style={{
+          position: "absolute", inset: 0, opacity: .25,
+          backgroundImage: `
+            radial-gradient(circle at 20% 30%, ${cert.color}55 0%, transparent 40%),
+            radial-gradient(circle at 80% 70%, ${cert.color2}44 0%, transparent 40%)
+          `,
+        }} />
+        <div style={{
+          position: "absolute", inset: 0, opacity: .15,
+          backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='20' cy='30' r='1' fill='%237C6EFF'/><circle cx='70' cy='40' r='0.8' fill='%2310D98A'/><circle cx='40' cy='80' r='1' fill='%237C6EFF'/><circle cx='85' cy='20' r='0.6' fill='%2310D98A'/><circle cx='15' cy='60' r='0.8' fill='%237C6EFF'/></svg>")`,
+          backgroundSize: "200px 200px",
+        }} />
+        <div style={{ fontSize: 56, position: "relative", filter: "drop-shadow(0 4px 12px rgba(0,0,0,.4))" }}>{cert.icon}</div>
+      </div>
+      <div style={{ padding: "12px 16px" }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)", marginBottom: 2 }}>{cert.subtitle || cert.title}</div>
+        <div style={{ fontSize: 11, color: "var(--text-2)" }}>
+          {cert.userName} · {new Date(cert.issuedAt || cert.date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
+        </div>
+      </div>
+    </button>
+  );
+}
 
-  const stats = {
-    q1done: tasks.q1.filter(t=>t.done).length, q1total: tasks.q1.length,
-    q2done: tasks.q2.filter(t=>t.done).length, q2total: tasks.q2.length,
-    q3done: tasks.q3.filter(t=>t.done).length, q3total: tasks.q3.length,
-    q4done: tasks.q4.filter(t=>t.done).length, q4total: tasks.q4.length,
-    doneTotal: flatTasks(tasks).filter(t=>t.done).length,
-    total:     flatTasks(tasks).length,
-    streak:    streak.count,
-    doneToday: completedToday.count,
-  };
+// ─── DarkByte Stamp SVG ──────────────────────────────────
+function DarkByteStamp({ size = 100, color = "#7C6EFF" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 100 100" style={{ display: "block" }}>
+      <defs>
+        <path id="dbcircle" d="M 50,50 m -40,0 a 40,40 0 1,1 80,0 a 40,40 0 1,1 -80,0" />
+        <linearGradient id="dbgrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#7C6EFF" />
+          <stop offset="100%" stopColor="#10D98A" />
+        </linearGradient>
+      </defs>
+      {/* Outer rings */}
+      <circle cx="50" cy="50" r="46" fill="none" stroke="url(#dbgrad)" strokeWidth="2" />
+      <circle cx="50" cy="50" r="40" fill="none" stroke={color} strokeWidth="0.5" opacity="0.5" />
+      {/* Curved text top */}
+      <text fontSize="7" fontWeight="800" fill="url(#dbgrad)" letterSpacing="2.5" fontFamily="monospace">
+        <textPath href="#dbcircle" startOffset="2%">
+          ★ DARKBYTE ★ CERTIFIED ★
+        </textPath>
+      </text>
+      {/* Center mark */}
+      <g transform="translate(50, 50)">
+        <polygon
+          points="0,-16 5,-5 16,-5 7,3 10,15 0,8 -10,15 -7,3 -16,-5 -5,-5"
+          fill="url(#dbgrad)" opacity="0.9"
+        />
+        <text x="0" y="3" textAnchor="middle" fontSize="7" fontWeight="900" fill="#0D0B1E"
+          fontFamily="monospace" letterSpacing="0.5">DB</text>
+      </g>
+      {/* Splatter */}
+      <circle cx="14" cy="22" r="1.2" fill={color} opacity="0.4" />
+      <circle cx="86" cy="78" r="1" fill={color} opacity="0.5" />
+      <circle cx="12" cy="78" r="0.8" fill={color} opacity="0.3" />
+      <circle cx="88" cy="22" r="1.1" fill={color} opacity="0.4" />
+    </svg>
+  );
+}
 
-  const cert = CERT_TYPES.find(c => c.id === certType);
-  const date = todayAr();
-
-  const unlocked = certType === "streak"
-    ? stats.streak    >= (cert.minStreak || 3)
-    : stats.doneTotal >= (cert.minDone   || 5);
-
-  const reqText = certType === "streak"
-    ? `streak ${cert.minStreak} أيام (أنت عندك ${stats.streak})`
-    : `إنجاز ${cert.minDone} مهام (أنت أنجزت ${stats.doneTotal})`;
-
-  function handleIssue() {
-    if (!userName.trim()) { alert("اكتب اسمك!"); return; }
-    if (!unlocked) { alert("لازم تستوفي الشرط الأول!"); return; }
-    onIssue({ id: certIdRef.current, type: certType, name: userName, stats, date, issued: Date.now() });
-    setIssued(true);
-    certIdRef.current = genCertId();
-    setTimeout(() => setIssued(false), 3000);
-  }
-
-  async function handleDownload() {
-    setDL(true);
-    try {
-      if (!window.html2canvas) {
-        await new Promise((res, rej) => {
-          const s = document.createElement("script");
-          s.src = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
-          s.onload = res; s.onerror = rej;
-          document.head.appendChild(s);
-        });
-      }
-      const el = document.getElementById("cert-canvas");
-      const canvas = await window.html2canvas(el, { scale: 2, useCORS: true, backgroundColor: null, logging: false });
-      const a = document.createElement("a");
-      a.download = `شهادة-${userName}-CoreSystem.png`;
-      a.href = canvas.toDataURL("image/png");
-      a.click();
-    } catch(e) { alert("خطأ: " + e.message); }
-    setDL(false);
-  }
+// ─── Full Certificate Modal (Dark style) ──────────────────
+function CertificateModal({ data, issuedAt, onClose }) {
+  const cert = data;
+  const certColor = cert.color || "#7C6EFF";
+  const certColor2 = cert.color2 || "#10D98A";
+  const issueDate = new Date(issuedAt || cert.issuedAt || cert.date || Date.now());
 
   return (
-    <div style={{ display:"flex", flexDirection:"column", gap:20 }}>
+    <div
+      onClick={onClose}
+      style={{
+        position: "fixed", inset: 0,
+        background: "rgba(0, 0, 0, 0.85)",
+        backdropFilter: "blur(8px)",
+        WebkitBackdropFilter: "blur(8px)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        zIndex: 100, padding: "1.5rem 1rem",
+        animation: "fadeIn .2s ease",
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="slide-up"
+        style={{
+          maxWidth: 880, width: "100%",
+          background: "linear-gradient(145deg, #0D0B1E 0%, #1A1740 50%, #0D0B1E 100%)",
+          borderRadius: 20,
+          overflow: "hidden",
+          boxShadow: `0 30px 80px rgba(0,0,0,.6), 0 0 60px ${certColor}33`,
+          position: "relative",
+        }}
+      >
+        {/* The certificate itself */}
+        <div
+          id="certificate-printable"
+          style={{
+            position: "relative",
+            background: `
+              radial-gradient(ellipse 80% 60% at 20% 20%, ${certColor}22 0%, transparent 50%),
+              radial-gradient(ellipse 60% 40% at 80% 80%, ${certColor2}1A 0%, transparent 50%),
+              linear-gradient(135deg, #0D0B1E 0%, #14112E 50%, #0D0B1E 100%)
+            `,
+            padding: "44px 48px",
+            color: "#EAE8FF",
+            minHeight: 540,
+            overflow: "hidden",
+          }}
+        >
+          {/* Stars background */}
+          <div style={{
+            position: "absolute", inset: 0, opacity: .25, pointerEvents: "none",
+            backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><g fill='%237C6EFF'><circle cx='20' cy='30' r='0.8'/><circle cx='170' cy='40' r='0.6'/><circle cx='40' cy='160' r='1'/><circle cx='180' cy='170' r='0.7'/><circle cx='100' cy='20' r='0.5'/><circle cx='90' cy='180' r='0.6'/></g><g fill='%2310D98A'><circle cx='60' cy='50' r='0.5'/><circle cx='150' cy='90' r='0.8'/><circle cx='30' cy='100' r='0.6'/><circle cx='160' cy='150' r='0.5'/><circle cx='80' cy='140' r='0.7'/></g></svg>")`,
+            backgroundSize: "300px 300px",
+          }} />
 
-      {/* setup card */}
-      <div className="card" style={{ padding:24 }}>
-        <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:20 }}>
-          <div style={{ fontSize:30 }}>🎓</div>
-          <div>
-            <h2 style={{ fontSize:20, fontWeight:900, margin:0 }}>الشهادات الإلكترونية</h2>
-            <p style={{ fontSize:12, color:"var(--text-2)", margin:0 }}>شهادات رسمية بختم DarkByte · قابلة للتحميل كـ PNG</p>
-          </div>
-        </div>
+          {/* Geometric corner decorations */}
+          {[
+            { top: 12, left: 12, rotate: 0 },
+            { top: 12, right: 12, rotate: 90 },
+            { bottom: 12, right: 12, rotate: 180 },
+            { bottom: 12, left: 12, rotate: 270 },
+          ].map((c, i) => (
+            <svg key={i} width="60" height="60" viewBox="0 0 60 60" style={{
+              position: "absolute",
+              top: c.top, left: c.left, right: c.right, bottom: c.bottom,
+              transform: `rotate(${c.rotate}deg)`,
+              opacity: 0.6,
+            }}>
+              <path d="M 4 4 L 50 4 M 4 4 L 4 50 M 4 4 L 24 4 M 4 4 L 4 24"
+                stroke={certColor} strokeWidth="1.5" fill="none" />
+              <circle cx="4" cy="4" r="3" fill={certColor} />
+              <circle cx="24" cy="4" r="1.5" fill={certColor2} />
+              <circle cx="4" cy="24" r="1.5" fill={certColor2} />
+            </svg>
+          ))}
 
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:20 }}>
-          <div>
-            <label style={{ fontSize:12, fontWeight:700, color:"var(--text-2)", display:"block", marginBottom:7 }}>✍️ اسمك في الشهادة</label>
-            <input
-              value={userName} onChange={e => setUserName(e.target.value)}
-              placeholder="اكتب اسمك الكامل..."
-              style={{ width:"100%", padding:"11px 15px", border:"1px solid var(--border)", borderRadius:12, background:"var(--bg)", color:"var(--text)", fontSize:15, fontWeight:600 }}
-            />
-          </div>
-          <div>
-            <label style={{ fontSize:12, fontWeight:700, color:"var(--text-2)", display:"block", marginBottom:7 }}>🏅 نوع الشهادة</label>
-            <div style={{ display:"flex", flexDirection:"column", gap:7 }}>
-              {CERT_TYPES.map(c => {
-                const ok = c.id==="streak" ? stats.streak>=(c.minStreak||3) : stats.doneTotal>=(c.minDone||5);
-                const active = certType === c.id;
-                return (
-                  <label key={c.id} style={{ display:"flex", alignItems:"center", gap:10, padding:"9px 13px", borderRadius:11, border:`1.5px solid ${active?c.gradient[0]:"var(--border)"}`, background:active?`${c.gradient[0]}18`:"var(--bg)", cursor:ok?"pointer":"not-allowed", opacity:ok?1:.45, transition:"all .15s" }}>
-                    <input type="radio" name="ct" value={c.id} checked={active} onChange={()=>ok&&setCertType(c.id)} style={{ display:"none" }} />
-                    <span style={{ fontSize:18 }}>{c.icon}</span>
-                    <div>
-                      <div style={{ fontSize:13, fontWeight:700, color:active?c.gradient[0]:"var(--text)" }}>{c.label}</div>
-                      <div style={{ fontSize:10, color:"var(--text-2)" }}>{ok ? "✅ مفتوحة" : `🔒 ${c.id==="streak"?`streak ${c.minStreak} أيام`:`${c.minDone} مهام منجزة`}`}</div>
-                    </div>
-                  </label>
-                );
-              })}
+          {/* Top line */}
+          <div style={{ textAlign: "center", marginBottom: 20, position: "relative" }}>
+            <div style={{
+              display: "inline-flex", alignItems: "center", gap: 10, marginBottom: 4,
+            }}>
+              <div style={{ width: 30, height: 1, background: `linear-gradient(90deg, transparent, ${certColor})` }} />
+              <div style={{ fontSize: 9, letterSpacing: ".35em", color: certColor, fontFamily: "monospace", fontWeight: 700 }}>
+                ★ OFFICIAL CERTIFICATE ★
+              </div>
+              <div style={{ width: 30, height: 1, background: `linear-gradient(90deg, ${certColor}, transparent)` }} />
+            </div>
+            <div style={{
+              fontSize: 38, fontWeight: 900, color: "#fff",
+              fontFamily: "'Cinzel', Georgia, serif",
+              letterSpacing: ".04em",
+              marginBottom: 4,
+              background: `linear-gradient(135deg, #fff 0%, ${certColor} 50%, #fff 100%)`,
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+            }}>
+              CERTIFICATE
+            </div>
+            <div style={{
+              fontSize: 12, color: "#8B87C0", letterSpacing: ".4em",
+              fontFamily: "monospace", fontWeight: 600,
+            }}>
+              OF COMPLETION
             </div>
           </div>
-        </div>
 
-        <div style={{ marginTop:14, padding:"10px 14px", borderRadius:10, background:unlocked?"rgba(16,217,138,.1)":"rgba(245,158,11,.1)", border:`1px solid ${unlocked?"rgba(16,217,138,.3)":"rgba(245,158,11,.3)"}`, fontSize:12, color:unlocked?"#10D98A":"#F59E0B" }}>
-          {unlocked ? `✅ مبروك! استوفيت الشرط — ${reqText}` : `🔒 شرط الفتح: ${reqText}`}
-        </div>
+          {/* Divider */}
+          <div style={{
+            height: 1, margin: "0 40px 24px",
+            background: `linear-gradient(90deg, transparent 0%, ${certColor}AA 50%, transparent 100%)`,
+          }} />
 
-        <div style={{ display:"flex", gap:10, marginTop:16 }}>
-          <button onClick={handleIssue} disabled={!unlocked} style={{ flex:1, padding:"13px 20px", background:unlocked?`linear-gradient(135deg, ${cert.gradient[0]}, ${cert.gradient[1]})`:"var(--border)", color:"#fff", border:"none", borderRadius:12, fontSize:14, fontWeight:800, boxShadow:unlocked?`0 4px 24px ${cert.glow}`:"none" }}>
-            {issued ? "✅ تم الإصدار!" : "🎓 إصدار الشهادة"}
-          </button>
-          <button onClick={handleDownload} disabled={dl||!unlocked} style={{ padding:"13px 22px", background:"var(--surface)", color:"var(--text)", border:"1px solid var(--border)", borderRadius:12, fontSize:14, fontWeight:700 }}>
-            {dl ? "⏳..." : "⬇️ تحميل PNG"}
-          </button>
-        </div>
-      </div>
+          {/* Body */}
+          <div style={{ textAlign: "center", marginBottom: 28, padding: "0 24px" }}>
+            <div style={{
+              fontSize: 11, color: "#8B87C0", letterSpacing: ".3em",
+              fontFamily: "monospace", fontWeight: 600, marginBottom: 12,
+            }}>
+              THIS CERTIFICATE IS PROUDLY PRESENTED TO
+            </div>
+            <div style={{
+              fontSize: 36, fontWeight: 800, color: "#fff",
+              fontFamily: "Georgia, serif", letterSpacing: ".02em",
+              marginBottom: 8,
+              textShadow: `0 0 30px ${certColor}66`,
+            }}>
+              {cert.userName}
+            </div>
+            <div style={{
+              fontSize: 11, color: certColor, letterSpacing: ".25em",
+              fontFamily: "monospace", fontWeight: 600, marginBottom: 16,
+            }}>
+              FOR SUCCESSFULLY COMPLETING
+            </div>
+            <p style={{
+              fontSize: 13, lineHeight: 1.75, color: "#C4C0FF",
+              fontFamily: "Georgia, serif", margin: 0, fontStyle: "italic",
+              maxWidth: 560, marginLeft: "auto", marginRight: "auto",
+            }}>
+              "{cert.description}"
+            </p>
+            {cert.stats?.lifetime && (
+              <div style={{
+                marginTop: 18, display: "inline-block", padding: "8px 20px",
+                background: `linear-gradient(135deg, ${certColor}22, ${certColor2}11)`,
+                border: `1px solid ${certColor}55`,
+                borderRadius: 30,
+              }}>
+                <span style={{ fontSize: 11, color: "#8B87C0", fontFamily: "monospace" }}>
+                  with{" "}
+                </span>
+                <span style={{
+                  fontSize: 22, fontWeight: 800, color: certColor,
+                  fontFamily: "Georgia, serif", fontVariantNumeric: "tabular-nums",
+                }}>
+                  {cert.stats.lifetime}
+                </span>
+                <span style={{ fontSize: 11, color: "#8B87C0", fontFamily: "monospace" }}>
+                  {" "}tasks completed on Core System
+                </span>
+              </div>
+            )}
+            {cert.stats?.monthDone && (
+              <div style={{
+                marginTop: 18, display: "inline-block", padding: "8px 20px",
+                background: `linear-gradient(135deg, ${certColor}22, ${certColor2}11)`,
+                border: `1px solid ${certColor}55`,
+                borderRadius: 30,
+              }}>
+                <span style={{ fontSize: 11, color: "#8B87C0", fontFamily: "monospace" }}>
+                  with{" "}
+                </span>
+                <span style={{
+                  fontSize: 22, fontWeight: 800, color: certColor,
+                  fontFamily: "Georgia, serif", fontVariantNumeric: "tabular-nums",
+                }}>
+                  {cert.stats.monthDone}
+                </span>
+                <span style={{ fontSize: 11, color: "#8B87C0", fontFamily: "monospace" }}>
+                  {" "}tasks in {cert.stats.month}
+                </span>
+              </div>
+            )}
+          </div>
 
-      {/* preview */}
-      <div className="card" style={{ padding:24 }}>
-        <div style={{ fontSize:12, fontWeight:700, color:"var(--text-2)", marginBottom:14 }}>👁️ معاينة الشهادة — بياناتك الحقيقية</div>
-        <div style={{ overflowX:"auto" }}>
-          <CertPreview name={userName} cert={cert} stats={stats} certId={certIdRef.current} date={date} />
-        </div>
-      </div>
+          {/* Motivational line */}
+          <div style={{ textAlign: "center", marginBottom: 24, padding: "0 20px" }}>
+            <div style={{
+              display: "inline-flex", alignItems: "center", gap: 8,
+              fontSize: 10.5, color: certColor, fontFamily: "monospace",
+              fontWeight: 700, letterSpacing: ".15em",
+            }}>
+              <span style={{ width: 30, height: 1, background: `linear-gradient(90deg, transparent, ${certColor}AA)` }} />
+              <span>★</span>
+              <span>YOU DIDN'T JUST COMPLETE TASKS, YOU INVESTED IN YOURSELF</span>
+              <span>★</span>
+              <span style={{ width: 30, height: 1, background: `linear-gradient(90deg, ${certColor}AA, transparent)` }} />
+            </div>
+          </div>
 
-      {/* history */}
-      {certificates.length > 0 && (
-        <div className="card" style={{ padding:24 }}>
-          <h3 style={{ fontSize:16, fontWeight:800, marginBottom:16 }}>📋 شهاداتي ({certificates.length})</h3>
-          <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
-            {certificates.map((c,i) => {
-              const ct = CERT_TYPES.find(t=>t.id===c.type)||CERT_TYPES[0];
-              return (
-                <div key={i} style={{ display:"flex", alignItems:"center", gap:14, padding:"13px 17px", borderRadius:13, border:`1px solid ${ct.gradient[0]}33`, background:`${ct.gradient[0]}0A` }}>
-                  <div style={{ width:42, height:42, borderRadius:12, flexShrink:0, background:`linear-gradient(135deg, ${ct.gradient[0]}, ${ct.gradient[1]})`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:20, boxShadow:`0 4px 14px ${ct.glow}` }}>{ct.icon}</div>
-                  <div style={{ flex:1 }}>
-                    <div style={{ fontSize:14, fontWeight:800, color:ct.gradient[0] }}>{ct.label}</div>
-                    <div style={{ fontSize:12, color:"var(--text-2)" }}>{c.name} · {c.date} · {c.stats?.doneTotal??0} مهمة منجزة</div>
-                  </div>
-                  <div style={{ fontSize:9, color:"var(--text-2)", fontFamily:"monospace", opacity:.5 }}>{c.id}</div>
-                </div>
-              );
-            })}
+          {/* Footer: signature + stamp + date */}
+          <div style={{
+            display: "grid", gridTemplateColumns: "1fr auto 1fr",
+            alignItems: "flex-end", marginTop: 32, padding: "0 8px",
+            gap: 16,
+          }}>
+            {/* Signature */}
+            <div style={{ textAlign: "center" }}>
+              <div style={{
+                fontSize: 26, fontWeight: 700,
+                fontFamily: "'Brush Script MT', 'Lucida Handwriting', cursive",
+                fontStyle: "italic", color: "#fff",
+                borderBottom: "1.5px solid rgba(255,255,255,.3)",
+                paddingBottom: 4, marginBottom: 8,
+                transform: "rotate(-2deg)",
+                textShadow: `0 0 12px ${certColor}88`,
+              }}>
+                Basem Taha
+              </div>
+              <div style={{
+                fontSize: 9, color: "#8B87C0", letterSpacing: ".2em",
+                fontFamily: "monospace", fontWeight: 600,
+              }}>
+                FOUNDER · DARKBYTE
+              </div>
+            </div>
+
+            {/* Stamp */}
+            <div style={{ position: "relative" }}>
+              <DarkByteStamp size={110} color={certColor} />
+            </div>
+
+            {/* Date */}
+            <div style={{ textAlign: "center" }}>
+              <div style={{
+                fontSize: 14, color: "#fff", fontFamily: "monospace",
+                fontWeight: 700, borderBottom: "1.5px solid rgba(255,255,255,.3)",
+                paddingBottom: 4, marginBottom: 8, letterSpacing: ".12em",
+              }}>
+                {issueDate.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "2-digit" })}
+              </div>
+              <div style={{
+                fontSize: 9, color: "#8B87C0", letterSpacing: ".2em",
+                fontFamily: "monospace", fontWeight: 600,
+              }}>
+                DATE ISSUED
+              </div>
+            </div>
+          </div>
+
+          {/* Cert ID */}
+          <div style={{
+            textAlign: "center", marginTop: 22,
+            fontSize: 8, color: "#4B4870", fontFamily: "monospace",
+            letterSpacing: ".25em",
+          }}>
+            CERT ID: {(cert.id || "preview").toUpperCase()} · VERIFIED BY DARKBYTE × CORE SYSTEM
           </div>
         </div>
-      )}
+
+        {/* Modal actions */}
+        <div style={{
+          padding: "16px 20px",
+          display: "flex", gap: 8, justifyContent: "space-between",
+          background: "var(--surface)",
+          borderTop: "1px solid var(--border)",
+        }}>
+          <button onClick={onClose} style={{
+            padding: "10px 18px", borderRadius: "var(--radius-sm)",
+            border: "1px solid var(--border)", background: "var(--bg)",
+            color: "var(--text)", fontSize: 13, fontWeight: 600,
+          }}>Close</button>
+          <button onClick={() => window.print()} style={{
+            padding: "10px 20px", borderRadius: "var(--radius-sm)",
+            border: "none",
+            background: `linear-gradient(135deg, ${certColor}, ${certColor2})`,
+            color: "#fff", fontSize: 13, fontWeight: 700,
+            boxShadow: `0 4px 16px ${certColor}66`,
+          }}>🖨 Print / Save PDF</button>
+        </div>
+      </div>
     </div>
   );
 }
