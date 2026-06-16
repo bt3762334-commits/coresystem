@@ -1,113 +1,102 @@
 import { useEffect, useRef } from "react";
 
+const COLORS = [
+  "rgba(108,99,255,0.10)",
+  "rgba(16,185,129,0.08)",
+  "rgba(245,158,11,0.06)",
+  "rgba(244,63,94,0.05)",
+  "rgba(108,99,255,0.07)",
+];
+
 export default function D3Background() {
-  const canvasRef = useRef(null);
+  const svgRef = useRef(null);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
+    const svg = svgRef.current;
+    if (!svg) return;
+    const ns = "http://www.w3.org/2000/svg";
+    let W = window.innerWidth;
+    let H = window.innerHeight;
+    let rafId;
 
-    let W = canvas.width  = window.innerWidth;
-    let H = canvas.height = window.innerHeight;
-    let raf;
-
-    const onResize = () => {
-      W = canvas.width  = window.innerWidth;
-      H = canvas.height = window.innerHeight;
-      initParticles();
-    };
-    window.addEventListener("resize", onResize);
-
-    // Particles
-    const COUNT = Math.min(80, Math.floor((W * H) / 14000));
-    let particles = [];
-
-    function initParticles() {
-      particles = Array.from({ length: COUNT }, () => ({
-        x: Math.random() * W,
-        y: Math.random() * H,
-        r: Math.random() * 1.8 + 0.3,
-        vx: (Math.random() - .5) * .25,
-        vy: (Math.random() - .5) * .25,
-        alpha: Math.random() * .6 + .2,
-        color: Math.random() > .6
-          ? `rgba(124,110,255,`
-          : Math.random() > .5
-          ? `rgba(16,217,138,`
-          : `rgba(168,155,255,`,
-      }));
+    function resize() {
+      W = window.innerWidth;
+      H = window.innerHeight;
+      svg.setAttribute("width", W);
+      svg.setAttribute("height", H);
+      svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
     }
-    initParticles();
+    resize();
+    window.addEventListener("resize", resize);
 
-    function draw() {
-      ctx.clearRect(0, 0, W, H);
+    // Grid
+    const grid = document.createElementNS(ns, "g");
+    grid.setAttribute("opacity", "0.05");
+    for (let x = 0; x < 3000; x += 56) {
+      const l = document.createElementNS(ns, "line");
+      l.setAttribute("x1", x); l.setAttribute("y1", 0);
+      l.setAttribute("x2", x); l.setAttribute("y2", 3000);
+      l.setAttribute("stroke", "#7C6EFF");
+      l.setAttribute("stroke-width", "0.4");
+      grid.appendChild(l);
+    }
+    for (let y = 0; y < 3000; y += 56) {
+      const l = document.createElementNS(ns, "line");
+      l.setAttribute("x1", 0); l.setAttribute("y1", y);
+      l.setAttribute("x2", 3000); l.setAttribute("y2", y);
+      l.setAttribute("stroke", "#7C6EFF");
+      l.setAttribute("stroke-width", "0.4");
+      grid.appendChild(l);
+    }
+    svg.appendChild(grid);
 
-      // subtle grid lines
-      ctx.strokeStyle = "rgba(42,38,80,.35)";
-      ctx.lineWidth = .5;
-      const grid = 80;
-      for (let x = 0; x < W; x += grid) {
-        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
-      }
-      for (let y = 0; y < H; y += grid) {
-        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
-      }
+    // Blobs
+    const nodes = Array.from({ length: 14 }, (_, i) => ({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      r: 80 + Math.random() * 160,
+      c: COLORS[i % COLORS.length],
+      vx: (Math.random() - 0.5) * 0.25,
+      vy: (Math.random() - 0.5) * 0.25,
+    }));
 
-      // connection lines
-      for (let i = 0; i < particles.length; i++) {
-        for (let j = i + 1; j < particles.length; j++) {
-          const dx = particles[i].x - particles[j].x;
-          const dy = particles[i].y - particles[j].y;
-          const dist = Math.sqrt(dx*dx + dy*dy);
-          if (dist < 130) {
-            ctx.beginPath();
-            ctx.strokeStyle = `rgba(124,110,255,${(.12 * (1 - dist/130)).toFixed(3)})`;
-            ctx.lineWidth = .7;
-            ctx.moveTo(particles[i].x, particles[i].y);
-            ctx.lineTo(particles[j].x, particles[j].y);
-            ctx.stroke();
-          }
-        }
-      }
+    const circles = nodes.map((n) => {
+      const c = document.createElementNS(ns, "circle");
+      c.setAttribute("cx", n.x);
+      c.setAttribute("cy", n.y);
+      c.setAttribute("r", n.r);
+      c.setAttribute("fill", n.c);
+      c.style.filter = "blur(28px)";
+      svg.appendChild(c);
+      return c;
+    });
 
-      // particles
-      particles.forEach(p => {
-        p.x = (p.x + p.vx + W) % W;
-        p.y = (p.y + p.vy + H) % H;
-
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = `${p.color}${p.alpha.toFixed(2)})`;
-        ctx.fill();
-
-        // glow
-        const grd = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 4);
-        grd.addColorStop(0, `${p.color}${(p.alpha * .4).toFixed(2)})`);
-        grd.addColorStop(1, `${p.color}0)`);
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r * 4, 0, Math.PI * 2);
-        ctx.fillStyle = grd;
-        ctx.fill();
+    function tick() {
+      nodes.forEach((n, i) => {
+        n.x += n.vx; n.y += n.vy;
+        if (n.x < -n.r || n.x > W + n.r) n.vx *= -1;
+        if (n.y < -n.r || n.y > H + n.r) n.vy *= -1;
+        circles[i].setAttribute("cx", n.x);
+        circles[i].setAttribute("cy", n.y);
       });
-
-      raf = requestAnimationFrame(draw);
+      rafId = requestAnimationFrame(tick);
     }
+    rafId = requestAnimationFrame(tick);
 
-    draw();
     return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener("resize", onResize);
+      cancelAnimationFrame(rafId);
+      window.removeEventListener("resize", resize);
+      while (svg.firstChild) svg.removeChild(svg.firstChild);
     };
   }, []);
 
   return (
-    <canvas
-      ref={canvasRef}
+    <svg
+      ref={svgRef}
       style={{
-        position: "fixed", inset: 0, zIndex: 0,
-        pointerEvents: "none",
-        opacity: .7,
+        position: "fixed", inset: 0,
+        width: "100%", height: "100%",
+        pointerEvents: "none", zIndex: 0,
       }}
     />
   );
