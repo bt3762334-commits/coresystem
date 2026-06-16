@@ -1,91 +1,225 @@
-import { flatTasks, todayAr } from "../utils/helpers";
+import { useMemo } from "react";
+import { flatTasks, monthKey } from "../utils/helpers";
+
+const Q_META = [
+  { key: "q1", label: "عاجل ومهم",        color: "#EF4444" },
+  { key: "q2", label: "مهم مش عاجل",      color: "#6C63FF" },
+  { key: "q3", label: "عاجل مش مهم",      color: "#F59E0B" },
+  { key: "q4", label: "مش مهم ومش عاجل",  color: "#94A3B8" },
+];
+
+const DAYS_AR = ["سبت", "أحد", "إثنين", "ثلاثاء", "أربعاء", "خميس", "جمعة"];
 
 export default function Analytics({ tasks, streak, completedToday }) {
-  const all    = flatTasks(tasks);
-  const done   = all.filter(t => t.done).length;
-  const total  = all.length;
-  const pct    = total ? Math.round((done / total) * 100) : 0;
+  const all   = useMemo(() => flatTasks(tasks), [tasks]);
+  const done  = all.filter((t) => t.done).length;
+  const total = all.length;
+  const pct   = total ? Math.round((done / total) * 100) : 0;
 
-  const byQ = ["q1","q2","q3","q4"].map(q => ({
-    q, count: tasks[q]?.length || 0, done: tasks[q]?.filter(t=>t.done).length || 0,
+  const counts = Q_META.map((q) => ({
+    ...q,
+    total: tasks[q.key]?.length || 0,
+    done:  tasks[q.key]?.filter((t) => t.done).length || 0,
   }));
 
-  const qLabels = { q1: "عاجل ومهم 🔴", q2: "مهم 🟣", q3: "عاجل 🟡", q4: "منخفض ⚫" };
-  const qColors = { q1: "#EF4444", q2: "#6C63FF", q3: "#F59E0B", q4: "#6B7280" };
+  const R     = 48;
+  const circ  = 2 * Math.PI * R;
+  let offset  = 0;
+  const segments = counts.map((c) => {
+    const frac  = total ? c.total / total : 0;
+    const dash  = frac * circ;
+    const seg   = { dash, offset, color: c.color, frac };
+    offset += dash;
+    return seg;
+  });
 
-  const historyEntries = Object.entries(streak.history || {}).slice(-7);
+  const weekData = useMemo(() => {
+    const history = streak?.history || {};
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(Date.now() - i * 86_400_000);
+      const k = d.toDateString();
+      const dayIdx = d.getDay();
+      days.push({
+        day: DAYS_AR[dayIdx],
+        val: history[k] || 0,
+        isToday: i === 0,
+      });
+    }
+    return days;
+  }, [streak]);
+
+  const maxVal = Math.max(...weekData.map((d) => d.val), 1);
+  const monthTotal = weekData.reduce((s, d) => s + d.val, 0);
 
   return (
-    <div>
-      <div style={{ marginBottom: "1.5rem" }}>
-        <h2 style={{ fontSize: 22, fontWeight: 800, color: "#EAE8FF", margin: 0 }}>التحليلات 📊</h2>
-        <p style={{ color: "#8B87C0", fontSize: 13, marginTop: 4 }}>{todayAr()}</p>
-      </div>
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }} className="analytics-grid">
 
-      {/* Stats row */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12, marginBottom: 20 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }} className="kpi-grid">
         {[
-          { label: "سلسلة الأيام", val: streak.count + " 🔥", color: "#F59E0B" },
-          { label: "أنجزت اليوم",  val: completedToday.count + " ⚡", color: "#10D98A" },
-          { label: "المهام المكتملة", val: `${done}/${total}`, color: "#6C63FF" },
-          { label: "نسبة الإنجاز", val: pct + "%", color: pct >= 70 ? "#10D98A" : pct >= 40 ? "#F59E0B" : "#EF4444" },
-        ].map((s, i) => (
+          { icon: "📋", label: "إجمالي المهام",   value: total,                  color: "var(--purple)" },
+          { icon: "✅", label: "مكتملة",            value: done,                   color: "var(--green)"  },
+          { icon: "📈", label: "نسبة الإنجاز",    value: pct + "%",              color: "var(--amber)"  },
+          { icon: "🔥", label: "Streak الحالي",    value: streak.count + " يوم", color: "#EF4444"       },
+        ].map((k, i) => (
           <div key={i} style={{
-            background: "rgba(17,15,38,.8)", border: "1px solid rgba(124,110,255,.2)",
-            borderRadius: 14, padding: "1.2rem", textAlign: "center",
+            background: "var(--surface)", border: "1px solid var(--border)",
+            borderRadius: "var(--radius)", padding: "18px 20px",
+            boxShadow: "var(--shadow)",
+            position: "relative", overflow: "hidden",
           }}>
-            <div style={{ fontSize: 26, fontWeight: 800, color: s.color }}>{s.val}</div>
-            <div style={{ fontSize: 12, color: "#8B87C0", marginTop: 4 }}>{s.label}</div>
+            <div style={{
+              position: "absolute", top: 0, insetInlineStart: 0, width: 3, height: "100%",
+              background: k.color,
+            }} />
+            <div style={{ fontSize: 24, marginBottom: 8 }}>{k.icon}</div>
+            <div style={{ fontSize: 28, fontWeight: 300, color: k.color, fontVariantNumeric: "tabular-nums" }}>{k.value}</div>
+            <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>{k.label}</div>
           </div>
         ))}
       </div>
 
-      {/* Progress bar */}
-      <div style={{ background: "rgba(17,15,38,.8)", border: "1px solid rgba(124,110,255,.2)", borderRadius: 14, padding: "1.2rem", marginBottom: 16 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-          <span style={{ fontSize: 13, color: "#EAE8FF", fontWeight: 600 }}>تقدم المهام الكلي</span>
-          <span style={{ fontSize: 13, color: "#6C63FF", fontWeight: 700 }}>{pct}%</span>
-        </div>
-        <div style={{ height: 10, background: "rgba(255,255,255,.07)", borderRadius: 10, overflow: "hidden" }}>
-          <div style={{ height: "100%", width: pct + "%", background: "linear-gradient(90deg, #6C63FF, #10D98A)", borderRadius: 10, transition: "width .5s" }} />
-        </div>
-      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }} className="chart-grid">
 
-      {/* By quadrant */}
-      <div style={{ background: "rgba(17,15,38,.8)", border: "1px solid rgba(124,110,255,.2)", borderRadius: 14, padding: "1.2rem", marginBottom: 16 }}>
-        <p style={{ fontSize: 13, fontWeight: 700, color: "#EAE8FF", marginBottom: 12 }}>توزيع المهام</p>
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {byQ.map(({ q, count, done }) => (
-            <div key={q}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                <span style={{ fontSize: 12, color: qColors[q] }}>{qLabels[q]}</span>
-                <span style={{ fontSize: 12, color: "#8B87C0" }}>{done}/{count}</span>
-              </div>
-              <div style={{ height: 6, background: "rgba(255,255,255,.07)", borderRadius: 6, overflow: "hidden" }}>
-                <div style={{ height: "100%", width: count ? (done/count*100)+"%" : "0%", background: qColors[q], borderRadius: 6, transition: "width .5s" }} />
-              </div>
+        <div style={{
+          background: "var(--surface)", border: "1px solid var(--border)",
+          borderRadius: "var(--radius)", padding: 20, boxShadow: "var(--shadow)",
+        }}>
+          <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 16 }}>توزيع المهام على المصفوفة</h3>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+            <svg width="120" height="120" viewBox="0 0 120 120" style={{ flexShrink: 0 }}>
+              {total === 0 ? (
+                <circle cx="60" cy="60" r={R} fill="none" stroke="var(--border)" strokeWidth="18" />
+              ) : segments.map((s, i) => (
+                <circle key={i} cx="60" cy="60" r={R} fill="none"
+                  stroke={s.color} strokeWidth="18"
+                  strokeDasharray={`${s.dash} ${circ - s.dash}`}
+                  strokeDashoffset={-s.offset}
+                  style={{ transform: "rotate(-90deg)", transformOrigin: "60px 60px" }}
+                />
+              ))}
+              <text x="60" y="58" textAnchor="middle" style={{
+                fontSize: 20, fontWeight: 600, fill: "var(--text)", fontFamily: "var(--font)",
+              }}>{pct}%</text>
+              <text x="60" y="74" textAnchor="middle" style={{
+                fontSize: 9, fill: "var(--text-2)", fontFamily: "var(--font)",
+              }}>إنجاز</text>
+            </svg>
+
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 10 }}>
+              {counts.map((c, i) => {
+                const qPct = c.total ? Math.round((c.done / c.total) * 100) : 0;
+                return (
+                  <div key={i}>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 3 }}>
+                      <span style={{ color: c.color, fontWeight: 600 }}>Q{i + 1}</span>
+                      <span style={{ color: "var(--text-2)" }}>{c.done}/{c.total}</span>
+                    </div>
+                    <div style={{
+                      height: 6, background: "var(--bg)", borderRadius: 3,
+                      overflow: "hidden", border: "1px solid var(--border)",
+                    }}>
+                      <div style={{
+                        height: "100%", width: qPct + "%", background: c.color,
+                        borderRadius: 3, transition: "width .6s ease",
+                      }} />
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          ))}
-        </div>
-      </div>
+          </div>
 
-      {/* History */}
-      {historyEntries.length > 0 && (
-        <div style={{ background: "rgba(17,15,38,.8)", border: "1px solid rgba(124,110,255,.2)", borderRadius: 14, padding: "1.2rem" }}>
-          <p style={{ fontSize: 13, fontWeight: 700, color: "#EAE8FF", marginBottom: 12 }}>سجل الأيام السابقة 📅</p>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {historyEntries.map(([date, count]) => (
-              <div key={date} style={{
-                background: "rgba(108,99,255,.15)", border: "1px solid rgba(108,99,255,.25)",
-                borderRadius: 10, padding: "8px 12px", textAlign: "center",
-              }}>
-                <div style={{ fontSize: 16, fontWeight: 700, color: "#A89BFF" }}>{count}</div>
-                <div style={{ fontSize: 10, color: "#8B87C0", marginTop: 2 }}>{date.slice(5)}</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginTop: 16 }}>
+            {counts.map((c, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11 }}>
+                <div style={{ width: 8, height: 8, borderRadius: "50%", background: c.color, flexShrink: 0 }} />
+                <span style={{ color: "var(--text-2)" }}>{c.label}</span>
               </div>
             ))}
           </div>
         </div>
-      )}
+
+        <div style={{
+          background: "var(--surface)", border: "1px solid var(--border)",
+          borderRadius: "var(--radius)", padding: 20, boxShadow: "var(--shadow)",
+        }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <h3 style={{ fontSize: 14, fontWeight: 600 }}>المهام المكتملة — الأسبوع</h3>
+            <span style={{
+              fontSize: 11, padding: "2px 8px", borderRadius: 12,
+              background: "var(--purple-lt)", color: "var(--purple-dk)", fontWeight: 600,
+            }}>
+              {monthTotal} هذا الأسبوع
+            </span>
+          </div>
+
+          <div style={{
+            display: "flex", alignItems: "flex-end", gap: 6,
+            height: 160, paddingBottom: 24, position: "relative",
+          }}>
+            {weekData.map((d, i) => {
+              const h = Math.max((d.val / maxVal) * 120, 4);
+              return (
+                <div key={i} style={{
+                  flex: 1, display: "flex", flexDirection: "column",
+                  alignItems: "center", height: "100%",
+                  justifyContent: "flex-end", gap: 4,
+                }}>
+                  <span style={{
+                    fontSize: 10, color: d.isToday ? "var(--purple)" : "var(--text-2)",
+                    fontWeight: d.isToday ? 700 : 400,
+                  }}>{d.val}</span>
+                  <div style={{
+                    width: "100%", height: h,
+                    background: d.isToday
+                      ? "linear-gradient(180deg, var(--purple) 0%, #A78BFA 100%)"
+                      : d.val > 0
+                        ? "linear-gradient(180deg, var(--green) 0%, #34D399 100%)"
+                        : "var(--border)",
+                    borderRadius: "6px 6px 0 0",
+                    transition: "height .5s ease",
+                    position: "relative", overflow: "hidden",
+                  }}>
+                    {d.isToday && (
+                      <div style={{
+                        position: "absolute", inset: 0,
+                        background: "linear-gradient(180deg, rgba(255,255,255,.25), transparent)",
+                      }} />
+                    )}
+                  </div>
+                  <span style={{
+                    fontSize: 9, color: d.isToday ? "var(--purple)" : "var(--text-2)",
+                    position: "absolute", bottom: 0,
+                    fontWeight: d.isToday ? 600 : 400,
+                  }}>{d.day}</span>
+                </div>
+              );
+            })}
+          </div>
+
+          <div style={{
+            marginTop: 10, padding: "10px 12px",
+            background: "linear-gradient(135deg, var(--purple-lt) 0%, rgba(16,185,129,.1) 100%)",
+            borderRadius: "var(--radius-sm)", fontSize: 12,
+            color: "var(--purple-dk)", lineHeight: 1.6,
+            border: "1px solid rgba(108,99,255,.15)",
+          }}>
+            💡 <strong>نصيحة:</strong> ركّز على Q2 (مهم مش عاجل) — هي اللي بتبني المستقبل وبتتأجّل دايماً.
+          </div>
+        </div>
+      </div>
+
+      <style>{`
+        @media (max-width: 880px) {
+          .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .chart-grid { grid-template-columns: 1fr !important; }
+        }
+        @media (max-width: 480px) {
+          .kpi-grid { grid-template-columns: 1fr 1fr !important; }
+        }
+      `}</style>
     </div>
   );
 }
