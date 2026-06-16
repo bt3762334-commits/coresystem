@@ -1,6 +1,6 @@
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
   --font:       "Cairo", system-ui, sans-serif;
@@ -17,7 +17,6 @@
   --slate-lt:   #1A2035;
   --slate-dk:   #CBD5E1;
 
-  /* Dark base */
   --bg:         #080714;
   --bg-2:       #0D0B1E;
   --surface:    #110F26;
@@ -27,7 +26,6 @@
   --text:       #EAE8FF;
   --text-2:     #8B87C0;
 
-  /* Navbar — light/accent (the bright zone) */
   --nav-bg:     #6C63FF;
   --nav-bg-2:   #5548E8;
   --nav-text:   #FFFFFF;
@@ -81,15 +79,15 @@ input:focus, textarea:focus, select:focus {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 3px; }
 
-@keyframes fadeIn    { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:none } }
+@keyframes fadeIn     { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:none } }
 @keyframes fadeInDown { from { opacity:0; transform:translateY(-10px) } to { opacity:1; transform:none } }
-@keyframes pulse     { 0%,100% { opacity:1 } 50% { opacity:.5 } }
-@keyframes shimmer   { 0% { background-position: -200% center } 100% { background-position: 200% center } }
-@keyframes float     { 0%,100% { transform:translateY(0) } 50% { transform:translateY(-6px) } }
+@keyframes pulse      { 0%,100% { opacity:1 } 50% { opacity:.5 } }
+@keyframes shimmer    { 0% { background-position: -200% center } 100% { background-position: 200% center } }
+@keyframes float      { 0%,100% { transform:translateY(0) } 50% { transform:translateY(-6px) } }
 @keyframes glow-pulse { 0%,100% { box-shadow: 0 0 20px rgba(124,110,255,.3) } 50% { box-shadow: 0 0 40px rgba(124,110,255,.6) } }
-@keyframes spin      { to { transform: rotate(360deg) } }
+@keyframes spin       { to { transform: rotate(360deg) } }
 
-.fade-in { animation: fadeIn .35s ease-out both; }
+.fade-in      { animation: fadeIn .35s ease-out both; }
 .fade-in-down { animation: fadeInDown .3s ease-out both; }
 
 .gradient-text {
@@ -113,7 +111,6 @@ input:focus, textarea:focus, select:focus {
   box-shadow: var(--shadow);
 }
 
-/* Quran/Hadith card special style */
 .divine-card {
   background: linear-gradient(135deg, rgba(124,110,255,.12), rgba(16,217,138,.06));
   border: 1px solid rgba(124,110,255,.3);
@@ -132,7 +129,6 @@ input:focus, textarea:focus, select:focus {
   pointer-events: none;
 }
 
-/* Certificate special */
 .cert-frame {
   background: linear-gradient(145deg, #1A1740, #0D0B1E);
   border: 2px solid transparent;
