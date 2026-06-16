@@ -40,8 +40,6 @@ export default function App() {
 }
 
 function AuthenticatedApp({ session, setSession, tab, setTab }) {
-  const [menuOpen, setMenuOpen] = useState(false);
-
   const [tasks,        setTasks]        = useStorage("cs_tasks",        EMPTY_TASKS,                            session);
   const [streak,       setStreak]       = useStorage("cs_streak",       { count: 0, lastDate: null, history: {} }, session);
   const [reflections,  setReflections]  = useStorage("cs_reflections",  {},                                     session);
@@ -105,11 +103,6 @@ function AuthenticatedApp({ session, setSession, tab, setTab }) {
     if (!window.confirm("متأكد إنك عايز تسجّل خروج؟")) return;
     logout();
     setSession(null);
-  }
-
-  function handleNavClick(id) {
-    setTab(id);
-    setMenuOpen(false);
   }
 
   const allTasks  = useMemo(() => flatTasks(tasks), [tasks]);
@@ -185,7 +178,7 @@ function AuthenticatedApp({ session, setSession, tab, setTab }) {
               </div>
             </div>
 
-            {/* Mobile: avatar + hamburger */}
+            {/* Mobile: avatar only */}
             <div className="app-mobile-right" style={{ display: "none", alignItems: "center", gap: 8 }}>
               <div style={{
                 width: 32, height: 32, borderRadius: "50%",
@@ -194,27 +187,7 @@ function AuthenticatedApp({ session, setSession, tab, setTab }) {
                 display: "flex", alignItems: "center", justifyContent: "center",
                 color: "#fff", fontSize: 13, fontWeight: 700, flexShrink: 0,
               }}>{session.avatar}</div>
-              <button
-                onClick={() => setMenuOpen((p) => !p)}
-                style={{
-                  background: "rgba(255,255,255,.15)",
-                  border: "1px solid rgba(255,255,255,.3)",
-                  borderRadius: 10, width: 38, height: 38,
-                  display: "flex", flexDirection: "column",
-                  alignItems: "center", justifyContent: "center", gap: 5,
-                  cursor: "pointer",
-                }}
-              >
-                {menuOpen ? (
-                  <span style={{ color: "#fff", fontSize: 20, lineHeight: 1 }}>✕</span>
-                ) : (
-                  <>
-                    <span style={{ display: "block", width: 18, height: 2, background: "#fff", borderRadius: 2 }} />
-                    <span style={{ display: "block", width: 18, height: 2, background: "#fff", borderRadius: 2 }} />
-                    <span style={{ display: "block", width: 18, height: 2, background: "#fff", borderRadius: 2 }} />
-                  </>
-                )}
-              </button>
+              <span style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{session.name}</span>
             </div>
           </div>
 
@@ -237,72 +210,34 @@ function AuthenticatedApp({ session, setSession, tab, setTab }) {
           </nav>
         </div>
 
-        {/* Mobile dropdown menu */}
-        {menuOpen && (
-          <div className="app-mobile-menu" style={{
-            background: "rgba(53,40,200,.97)",
-            borderTop: "1px solid rgba(255,255,255,.15)",
-            padding: "12px 16px 16px",
-          }}>
-            {/* Stats */}
-            <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
-              {stats.map((s, i) => (
-                <span key={i} style={{
-                  background: "rgba(255,255,255,.12)",
-                  border: "1px solid rgba(255,255,255,.2)",
-                  borderRadius: 16, padding: "5px 12px",
-                  fontSize: 12, color: "#fff",
-                }}>{s.icon} <strong>{s.val}</strong></span>
-              ))}
-            </div>
-
-            {/* Nav items */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-              {NAV.map((n) => (
-                <button key={n.id} onClick={() => handleNavClick(n.id)} style={{
-                  padding: "11px 14px", borderRadius: 10, border: "none",
-                  background: tab === n.id ? "rgba(255,255,255,.2)" : "rgba(255,255,255,.06)",
-                  color: "#fff", fontSize: 14, fontWeight: tab === n.id ? 700 : 400,
-                  display: "flex", alignItems: "center", gap: 10,
-                  textAlign: "right", cursor: "pointer",
-                  borderRight: tab === n.id ? "3px solid #fff" : "3px solid transparent",
-                }}>
-                  <span style={{ fontSize: 18 }}>{n.icon}</span>
-                  <span>{n.label}</span>
-                  {tab === n.id && (
-                    <span style={{ marginRight: "auto", fontSize: 11, opacity: .7 }}>● الآن</span>
-                  )}
-                </button>
-              ))}
-            </div>
-
-            {/* Logout */}
-            <button onClick={handleLogout} style={{
-              marginTop: 12, width: "100%", padding: "10px 14px", borderRadius: 10,
-              border: "1px solid rgba(255,255,255,.2)",
-              background: "rgba(239,68,68,.15)",
-              color: "#FCA5A5", fontSize: 13, fontWeight: 600,
-              display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-              cursor: "pointer",
-            }}>
-              🚪 تسجيل خروج — {session.name}
-            </button>
-          </div>
-        )}
       </header>
 
-      {/* Overlay to close menu */}
-      {menuOpen && (
-        <div
-          onClick={() => setMenuOpen(false)}
-          style={{
-            position: "fixed", inset: 0, zIndex: 49,
-            background: "rgba(0,0,0,.4)",
-          }}
-        />
-      )}
+      {/* Mobile bottom nav */}
+      <nav className="app-bottom-nav" style={{ display: "none" }}>
+        {NAV.map((n) => (
+          <button key={n.id} onClick={() => setTab(n.id)} style={{
+            flex: 1, border: "none", background: "none",
+            display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+            gap: 3, padding: "6px 2px", cursor: "pointer",
+            color: tab === n.id ? "#6C63FF" : "rgba(255,255,255,.5)",
+          }}>
+            <span style={{ fontSize: 20, lineHeight: 1 }}>{n.icon}</span>
+            <span style={{
+              fontSize: 9.5, fontWeight: tab === n.id ? 700 : 400,
+              whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+              maxWidth: 52,
+            }}>{n.label}</span>
+            {tab === n.id && (
+              <span style={{
+                width: 4, height: 4, borderRadius: "50%",
+                background: "#6C63FF", display: "block",
+              }} />
+            )}
+          </button>
+        ))}
+      </nav>
 
-      <main style={{
+      <main className="app-main" style={{
         position: "relative", zIndex: 1,
         maxWidth: 1200, margin: "0 auto", padding: "1.25rem 1rem",
       }}>
@@ -321,16 +256,25 @@ function AuthenticatedApp({ session, setSession, tab, setTab }) {
           .app-pills-desktop { display: none !important; }
           .app-nav-desktop   { display: none !important; }
           .app-mobile-right  { display: flex !important; }
+          .app-bottom-nav {
+            display: flex !important;
+            position: fixed; bottom: 0; left: 0; right: 0;
+            z-index: 100;
+            background: rgba(20, 15, 60, 0.97);
+            backdrop-filter: blur(12px);
+            border-top: 1px solid rgba(108,99,255,0.35);
+            box-shadow: 0 -4px 24px rgba(0,0,0,0.4);
+            height: 62px;
+            padding-bottom: env(safe-area-inset-bottom, 0px);
+          }
+          .app-main { padding-bottom: 74px !important; }
         }
         @media (min-width: 721px) {
-          .app-mobile-menu  { display: none !important; }
-          .app-mobile-right { display: none !important; }
+          .app-mobile-right  { display: none !important; }
+          .app-bottom-nav    { display: none !important; }
         }
         @media (max-width: 480px) {
-          main { padding: 1rem .75rem !important; }
-        }
-        .matrix-grid {
-          grid-template-columns: 1fr !important;
+          .app-main { padding: 1rem .75rem 74px !important; }
         }
         @media (max-width: 720px) {
           .matrix-grid > div { grid-column: 1 !important; grid-row: auto !important; }
