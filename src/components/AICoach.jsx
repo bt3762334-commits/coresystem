@@ -5,9 +5,8 @@ export default function AICoach({ tasks, streak, completedToday, onDistributeTas
   const [messages, setMessages] = useState([
     { role: "assistant", text: "أهلاً! أنا مدربك الذكي 🤖\nأقدر أساعدك تحلل مهامك، تحدد أولوياتك، أو توزع مهام جديدة على المصفوفة. جرب تقول لي: \"وزع مهامي\" أو اسألني أي سؤال!" }
   ]);
-  const [input, setInput]   = useState("");
+  const [input, setInput]     = useState("");
   const [loading, setLoading] = useState(false);
-  const abortRef = useRef(null);
   const bottomRef = useRef(null);
 
   const flatAll = Object.entries(tasks).flatMap(([q, arr]) => arr.map(t => ({ ...t, q })));
@@ -21,7 +20,6 @@ export default function AICoach({ tasks, streak, completedToday, onDistributeTas
     setMessages((p) => [...p, userMsg]);
     setLoading(true);
 
-    // Check if user wants to distribute tasks
     if (/وزع|أضف مهام|distribute|add tasks/i.test(text)) {
       await distributeTasks(text);
       setLoading(false);
@@ -42,18 +40,18 @@ ${tasksSummary}
 رد بشكل ودود ومحفز ومختصر. استخدم emojis بشكل معقول.`;
 
     try {
-      abortRef.current = new AbortController();
       const reply = await askAI({
         system,
-        messages: [...messages, userMsg].map(m => ({ role: m.role === "assistant" ? "assistant" : "user", content: m.text })),
-        signal: abortRef.current.signal,
+        messages: [...messages, userMsg].map(m => ({
+          role: m.role === "assistant" ? "assistant" : "user",
+          content: m.text,
+        })),
       });
       setMessages((p) => [...p, { role: "assistant", text: reply }]);
     } catch (e) {
-      if (e.name !== "AbortError") {
-        setMessages((p) => [...p, { role: "assistant", text: "❌ حصل خطأ: " + e.message }]);
-      }
+      setMessages((p) => [...p, { role: "assistant", text: "❌ حصل خطأ: " + e.message }]);
     }
+
     setLoading(false);
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
   }
@@ -62,15 +60,13 @@ ${tasksSummary}
     const system = `أنت مساعد ذكي. المستخدم يريد إضافة مهام وتوزيعها على مصفوفة أيزنهاور.
 الربعات: q1 (عاجل ومهم), q2 (مهم وغير عاجل), q3 (عاجل وغير مهم), q4 (غير عاجل وغير مهم).
 استخرج المهام من رسالة المستخدم ووزعها. إذا لم تجد مهام محددة، اقترح 3 مهام عامة مفيدة.
-رد بـ JSON فقط بهذا الشكل:
+رد بـ JSON فقط بهذا الشكل بدون أي نص إضافي:
 {"tasks": [{"text": "نص المهمة", "q": "q1"}]}`;
 
     try {
-      abortRef.current = new AbortController();
       const reply = await askAI({
         system,
         messages: [{ role: "user", content: userText }],
-        signal: abortRef.current.signal,
       });
       const clean = reply.replace(/```json|```/g, "").trim();
       const parsed = JSON.parse(clean);
@@ -83,9 +79,11 @@ ${tasksSummary}
         onDistributeTasks(distributed);
         setMessages((p) => [...p, { role: "assistant", text: `✅ تم توزيع ${parsed.tasks.length} مهام على المصفوفة! روح تاب المصفوفة تشوفها 🎯` }]);
       }
-    } catch {
-      setMessages((p) => [...p, { role: "assistant", text: "❌ مقدرتش أوزع المهام، جرب تاني" }]);
+    } catch (e) {
+      setMessages((p) => [...p, { role: "assistant", text: "❌ مقدرتش أوزع المهام: " + e.message }]);
     }
+    setLoading(false);
+    setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
   }
 
   return (
@@ -95,16 +93,13 @@ ${tasksSummary}
         <p style={{ color: "#8B87C0", fontSize: 13, marginTop: 4 }}>مدربك الذكي الشخصي</p>
       </div>
 
-      {/* Chat */}
       <div style={{
         background: "rgba(17,15,38,.8)", border: "1px solid rgba(124,110,255,.2)",
         borderRadius: 16, padding: "1rem", height: 400, overflowY: "auto",
         display: "flex", flexDirection: "column", gap: 12, marginBottom: 12,
       }}>
         {messages.map((m, i) => (
-          <div key={i} style={{
-            display: "flex", justifyContent: m.role === "user" ? "flex-start" : "flex-end",
-          }}>
+          <div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-start" : "flex-end" }}>
             <div style={{
               maxWidth: "80%", padding: "10px 14px", borderRadius: 14,
               background: m.role === "user" ? "rgba(108,99,255,.25)" : "rgba(16,217,138,.12)",
@@ -123,17 +118,15 @@ ${tasksSummary}
         <div ref={bottomRef} />
       </div>
 
-      {/* Quick actions */}
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
         {["حلل مهامي", "وزع مهامي على المصفوفة", "نصيحة لزيادة الإنتاجية", "ما هي أولوياتي اليوم؟"].map(s => (
-          <button key={s} onClick={() => { setInput(s); }} style={{
+          <button key={s} onClick={() => setInput(s)} style={{
             padding: "5px 12px", borderRadius: 20, border: "1px solid rgba(124,110,255,.3)",
             background: "rgba(124,110,255,.1)", color: "#A89BFF", fontSize: 12,
           }}>{s}</button>
         ))}
       </div>
 
-      {/* Input */}
       <div style={{ display: "flex", gap: 8 }}>
         <input
           value={input} onChange={e => setInput(e.target.value)}
