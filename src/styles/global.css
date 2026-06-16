@@ -1,20 +1,24 @@
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Cinzel:wght@600;800;900&display=swap');
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
   --font:       "Cairo", system-ui, sans-serif;
+
   --purple:     #7C6EFF;
-  --purple-lt:  #2A2460;
+  --purple-lt:  rgba(124,110,255,.12);
   --purple-dk:  #A89BFF;
   --green:      #10D98A;
-  --green-lt:   #0A2E22;
+  --green-lt:   rgba(16,217,138,.12);
   --green-dk:   #5EFFC7;
   --amber:      #F59E0B;
-  --amber-lt:   #2E1E05;
+  --amber-lt:   rgba(245,158,11,.12);
   --amber-dk:   #FCD34D;
+  --rose:       #F43F5E;
+  --rose-lt:    rgba(244,63,94,.12);
+  --rose-dk:    #FCA5B4;
   --slate:      #94A3B8;
-  --slate-lt:   #1A2035;
+  --slate-lt:   rgba(148,163,184,.1);
   --slate-dk:   #CBD5E1;
 
   --bg:         #080714;
@@ -25,20 +29,15 @@
   --border-2:   #3D3870;
   --text:       #EAE8FF;
   --text-2:     #8B87C0;
-
-  --nav-bg:     #6C63FF;
-  --nav-bg-2:   #5548E8;
-  --nav-text:   #FFFFFF;
-  --nav-text-2: rgba(255,255,255,0.75);
+  --text-3:     #5C587A;
 
   --radius:     16px;
   --radius-sm:  10px;
+  --radius-lg:  20px;
   --shadow:     0 2px 8px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.3);
   --shadow-md:  0 4px 20px rgba(108,99,255,.25);
   --shadow-lg:  0 12px 48px rgba(108,99,255,.3);
-
-  --glow-purple: 0 0 30px rgba(124,110,255,.4);
-  --glow-green:  0 0 30px rgba(16,217,138,.3);
+  --shadow-xl:  0 20px 60px rgba(0,0,0,.5);
 }
 
 html { direction: rtl; scroll-behavior: smooth; }
@@ -50,6 +49,7 @@ body {
   min-height: 100vh;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
   background-image:
     radial-gradient(ellipse 80% 50% at 20% 10%, rgba(108,99,255,.12) 0%, transparent 60%),
@@ -60,6 +60,7 @@ button {
   cursor: pointer;
   font-family: var(--font);
   transition: opacity .15s, transform .1s, background .15s, box-shadow .2s;
+  -webkit-tap-highlight-color: transparent;
 }
 button:active  { transform: scale(.97); }
 button:disabled { opacity: .5; cursor: not-allowed; transform: none; }
@@ -67,7 +68,7 @@ button:disabled { opacity: .5; cursor: not-allowed; transform: none; }
 input, textarea, select {
   font-family: var(--font);
   outline: none;
-  transition: border-color .2s, box-shadow .2s;
+  transition: border-color .2s, box-shadow .2s, background .2s;
   color-scheme: dark;
 }
 input:focus, textarea:focus, select:focus {
@@ -75,72 +76,68 @@ input:focus, textarea:focus, select:focus {
   box-shadow: 0 0 0 3px rgba(124,110,255,.25);
 }
 
-::-webkit-scrollbar { width: 5px; }
+a { color: var(--purple); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--purple); }
 
-@keyframes fadeIn     { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:none } }
-@keyframes fadeInDown { from { opacity:0; transform:translateY(-10px) } to { opacity:1; transform:none } }
-@keyframes pulse      { 0%,100% { opacity:1 } 50% { opacity:.5 } }
-@keyframes shimmer    { 0% { background-position: -200% center } 100% { background-position: 200% center } }
-@keyframes float      { 0%,100% { transform:translateY(0) } 50% { transform:translateY(-6px) } }
-@keyframes glow-pulse { 0%,100% { box-shadow: 0 0 20px rgba(124,110,255,.3) } 50% { box-shadow: 0 0 40px rgba(124,110,255,.6) } }
-@keyframes spin       { to { transform: rotate(360deg) } }
+/* ─── Animations ────────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
-.fade-in      { animation: fadeIn .35s ease-out both; }
-.fade-in-down { animation: fadeInDown .3s ease-out both; }
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.fade-in  { animation: fadeIn .35s ease-out both; }
+.slide-up { animation: slideUp .45s ease-out both; }
+
+/* ─── Utility classes ───────────────────────────────────── */
 .gradient-text {
-  background: linear-gradient(135deg, var(--purple-dk), #C4B5FD 50%, var(--green-dk));
+  background: linear-gradient(135deg, var(--purple-dk) 0%, #C4B5FD 50%, var(--green-dk) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-}
-
-.glass {
-  background: rgba(17,15,38,.7);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--border);
-}
-
-.card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  color: transparent;
 }
 
 .divine-card {
-  background: linear-gradient(135deg, rgba(124,110,255,.12), rgba(16,217,138,.06));
+  background: linear-gradient(135deg, rgba(124,110,255,.15) 0%, rgba(16,217,138,.08) 100%);
   border: 1px solid rgba(124,110,255,.3);
   border-radius: var(--radius);
   position: relative;
   overflow: hidden;
 }
-.divine-card::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  right: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle at center, rgba(124,110,255,.05) 0%, transparent 60%);
-  pointer-events: none;
+
+.glass {
+  background: rgba(17,15,38,.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
 }
 
-.cert-frame {
-  background: linear-gradient(145deg, #1A1740, #0D0B1E);
-  border: 2px solid transparent;
-  border-radius: 20px;
-  background-clip: padding-box;
-  position: relative;
-}
-.cert-frame::before {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border-radius: 22px;
-  background: linear-gradient(135deg, #7C6EFF, #10D98A, #7C6EFF);
-  z-index: -1;
+/* ─── Print styles for certificates ─────────────────────── */
+@media print {
+  body * { visibility: hidden; }
+  #certificate-printable, #certificate-printable * { visibility: visible; }
+  #certificate-printable {
+    position: absolute;
+    left: 0; top: 0;
+    width: 100%;
+  }
 }
