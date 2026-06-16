@@ -1,33 +1,38 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { userKey } from "../utils/auth";
 
-export function useStorage(baseKey, defaultValue, session) {
-  const key = session ? `${baseKey}_${userKey(session)}` : baseKey;
+export function useStorage(baseKey, initial, session) {
+  const storageKey = userKey(baseKey, session);
 
   const [value, setValue] = useState(() => {
     try {
-      const raw = localStorage.getItem(key);
-      return raw ? JSON.parse(raw) : defaultValue;
+      const item = localStorage.getItem(storageKey);
+      return item ? JSON.parse(item) : initial;
     } catch {
-      return defaultValue;
+      return initial;
     }
   });
 
   useEffect(() => {
     try {
-      localStorage.setItem(key, JSON.stringify(value));
-    } catch {}
-  }, [key, value]);
+      const item = localStorage.getItem(storageKey);
+      setValue(item ? JSON.parse(item) : initial);
+    } catch {
+      setValue(initial);
+    }
+  }, [storageKey]);
 
-  const set = useCallback((updater) => {
+  function set(next) {
     setValue((prev) => {
-      const next = typeof updater === "function" ? updater(prev) : updater;
+      const resolved = typeof next === "function" ? next(prev) : next;
       try {
-        localStorage.setItem(key, JSON.stringify(next));
-      } catch {}
-      return next;
+        localStorage.setItem(storageKey, JSON.stringify(resolved));
+      } catch (e) {
+        console.warn("localStorage write failed", e);
+      }
+      return resolved;
     });
-  }, [key]);
+  }
 
   return [value, set];
 }
