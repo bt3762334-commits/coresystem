@@ -1,5 +1,3 @@
-import { userKey } from "./auth";
-
 export const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 export const today = () => new Date().toDateString();
 
@@ -35,12 +33,23 @@ export function classifyTaskHeuristically(text) {
   return "q2";
 }
 
-// Direct Anthropic API call from browser
-export async function askAI({ system, messages, signal }) {
+export async function askAI({ system, messages }) {
   const key = import.meta.env.VITE_ANTHROPIC_KEY;
   if (!key) {
-    throw new Error("مفيش API Key — حط VITE_ANTHROPIC_KEY في ملف .env");
+    throw new Error("مفيش API Key — حط VITE_ANTHROPIC_KEY في Vercel");
   }
+
+  const body = {
+    model: "claude-sonnet-4-6",
+    max_tokens: 1000,
+    messages: messages.map(m => ({
+      role: m.role === "assistant" ? "assistant" : "user",
+      content: String(m.content || m.text || ""),
+    })),
+  };
+
+  if (system) body.system = system;
+
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -49,21 +58,14 @@ export async function askAI({ system, messages, signal }) {
       "anthropic-version": "2023-06-01",
       "anthropic-dangerous-direct-browser-access": "true",
     },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-6",
-      max_tokens: 1000,
-      system,
-      messages: messages.map(m => ({
-        role: m.role,
-        content: typeof m.content === "string" ? m.content : m.text || "",
-      })),
-    }),
-    signal,
+    body: JSON.stringify(body),
   });
+
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err?.error?.message || `فشل الطلب: ${res.status}`);
   }
+
   const data = await res.json();
   return data.content?.map(b => b.text || "").join("") || "";
 }
