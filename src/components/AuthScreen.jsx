@@ -1,121 +1,250 @@
 import { useState } from "react";
-import { loginUser, registerUser } from "../utils/auth";
+import { register, login } from "../utils/auth";
 
 export default function AuthScreen({ onSuccess }) {
-  const [mode, setMode] = useState("login"); // "login" | "register"
-  const [form, setForm] = useState({ name: "", password: "", email: "", phone: "" });
-  const [error, setError] = useState("");
+  const [mode, setMode]     = useState("login");
+  const [name, setName]     = useState("");
+  const [email, setEmail]   = useState("");
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm]   = useState("");
+  const [error, setError]   = useState("");
   const [loading, setLoading] = useState(false);
 
-  const set = (k, v) => setForm((p) => ({ ...p, [k]: v }));
-
-  async function handleSubmit() {
+  function reset() {
     setError("");
-    if (!form.name.trim()) return setError("اكتب اسمك الأول");
-    if (!form.password) return setError("اكتب الباسورد");
-    if (form.password.length < 4) return setError("الباسورد لازم 4 حروف على الأقل");
+    setName("");
+    setEmail("");
+    setPassword("");
+    setConfirm("");
+  }
+
+  function switchMode(next) {
+    setMode(next);
+    reset();
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setError("");
+
+    if (mode === "register" && password !== confirm) {
+      setError("كلمة المرور وتأكيدها مش متطابقين");
+      return;
+    }
 
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 400));
+    await new Promise((r) => setTimeout(r, 350));
 
-    if (mode === "register") {
-      const res = registerUser(form);
-      if (res.error) { setError(res.error); setLoading(false); return; }
-      // auto login after register
-      const login = loginUser({ name: form.name, password: form.password });
-      if (login.ok) onSuccess(login.session);
-    } else {
-      const res = loginUser({ name: form.name, password: form.password });
-      if (res.error) { setError(res.error); setLoading(false); return; }
-      onSuccess(res.session);
-    }
+    const result = mode === "register"
+      ? register({ name, email, password })
+      : login({ email, password });
+
     setLoading(false);
+
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
+    onSuccess(result.user);
   }
+
+  const isLogin = mode === "login";
 
   return (
     <div style={{
-      minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
-      position: "relative", zIndex: 10, padding: "1rem",
+      minHeight: "100vh",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "1.5rem 1rem",
+      position: "relative",
+      zIndex: 1,
     }}>
-      <div style={{
-        width: "100%", maxWidth: 420,
-        background: "rgba(17,15,38,.95)",
-        border: "1px solid rgba(124,110,255,.3)",
-        borderRadius: 24, padding: "2.5rem 2rem",
-        backdropFilter: "blur(20px)",
-        boxShadow: "0 24px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(124,110,255,.1)",
-      }}>
-        {/* Logo */}
-        <div style={{ textAlign: "center", marginBottom: "2rem" }}>
+      <div
+        className="slide-up"
+        style={{
+          width: "100%",
+          maxWidth: 420,
+          background: "var(--surface)",
+          border: "1px solid var(--border)",
+          borderRadius: "var(--radius-lg)",
+          padding: "2rem 1.75rem",
+          boxShadow: "var(--shadow-xl)",
+        }}
+      >
+        <div style={{ textAlign: "center", marginBottom: "1.5rem" }}>
           <div style={{
-            width: 64, height: 64, borderRadius: 18,
-            background: "linear-gradient(135deg, #6C63FF, #4338CA)",
+            width: 56, height: 56, margin: "0 auto 14px",
+            borderRadius: 16,
+            background: "linear-gradient(135deg, var(--purple) 0%, #A78BFA 100%)",
             display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 28, margin: "0 auto 1rem",
-            boxShadow: "0 8px 32px rgba(108,99,255,.4)",
+            fontSize: 28,
+            boxShadow: "var(--shadow-lg)",
           }}>⊞</div>
-          <h1 style={{ fontSize: 22, fontWeight: 800, color: "#EAE8FF", margin: 0 }}>Core System</h1>
-          <p style={{ fontSize: 12, color: "#8B87C0", marginTop: 4, letterSpacing: ".06em" }}>AI PRODUCTIVITY OS</p>
+          <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 4 }}>
+            <span className="gradient-text">Core System</span>
+          </h1>
+          <p style={{ fontSize: 13, color: "var(--text-2)" }}>
+            {isLogin ? "أهلاً بيك تاني، سجّل دخول" : "أنشئ حسابك وابدأ رحلتك"}
+          </p>
         </div>
 
-        {/* Tabs */}
-        <div style={{ display: "flex", background: "rgba(255,255,255,.05)", borderRadius: 12, padding: 4, marginBottom: "1.5rem" }}>
-          {[["login", "تسجيل الدخول"], ["register", "حساب جديد"]].map(([m, label]) => (
-            <button key={m} onClick={() => { setMode(m); setError(""); }} style={{
-              flex: 1, padding: "8px", border: "none", borderRadius: 10,
-              background: mode === m ? "rgba(124,110,255,.3)" : "transparent",
-              color: mode === m ? "#EAE8FF" : "#8B87C0",
-              fontWeight: mode === m ? 700 : 400, fontSize: 13,
-              transition: "all .2s",
-            }}>{label}</button>
+        <div style={{
+          display: "flex",
+          background: "var(--bg)",
+          padding: 4,
+          borderRadius: 24,
+          border: "1px solid var(--border)",
+          marginBottom: "1.5rem",
+        }}>
+          {[
+            { id: "login",    label: "تسجيل دخول" },
+            { id: "register", label: "حساب جديد"  },
+          ].map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => switchMode(t.id)}
+              style={{
+                flex: 1,
+                padding: "9px 12px",
+                borderRadius: 20,
+                border: "none",
+                fontSize: 13,
+                fontWeight: mode === t.id ? 600 : 400,
+                background: mode === t.id ? "var(--surface)" : "transparent",
+                color: mode === t.id ? "var(--text)" : "var(--text-2)",
+                boxShadow: mode === t.id ? "var(--shadow)" : "none",
+              }}
+            >
+              {t.label}
+            </button>
           ))}
         </div>
 
-        {/* Fields */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <Field label="الاسم *" value={form.name} onChange={v => set("name", v)} placeholder="اسمك" />
-          <Field label="الباسورد *" value={form.password} onChange={v => set("password", v)} placeholder="••••••" type="password" />
-          {mode === "register" && <>
-            <Field label="الإيميل (اختياري)" value={form.email} onChange={v => set("email", v)} placeholder="example@mail.com" type="email" />
-            <Field label="رقم الموبايل (اختياري)" value={form.phone} onChange={v => set("phone", v)} placeholder="01xxxxxxxxx" />
-          </>}
-        </div>
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {!isLogin && (
+            <Field label="الاسم" icon="👤" type="text" value={name} onChange={setName} placeholder="اسمك الكامل" autoComplete="name" />
+          )}
+          <Field label="الإيميل" icon="✉" type="email" value={email} onChange={setEmail} placeholder="example@mail.com" autoComplete="email" />
+          <Field
+            label="كلمة المرور"
+            icon="🔒"
+            type="password"
+            value={password}
+            onChange={setPassword}
+            placeholder={isLogin ? "••••••••" : "6 حروف على الأقل"}
+            autoComplete={isLogin ? "current-password" : "new-password"}
+          />
+          {!isLogin && (
+            <Field
+              label="تأكيد كلمة المرور"
+              icon="🔐"
+              type="password"
+              value={confirm}
+              onChange={setConfirm}
+              placeholder="أكّد كلمة المرور"
+              autoComplete="new-password"
+            />
+          )}
 
-        {error && (
-          <div style={{
-            marginTop: 12, padding: "10px 14px", borderRadius: 10,
-            background: "rgba(239,68,68,.15)", border: "1px solid rgba(239,68,68,.3)",
-            color: "#FCA5A5", fontSize: 13, textAlign: "center",
-          }}>{error}</div>
-        )}
+          {error && (
+            <div style={{
+              padding: "9px 12px",
+              borderRadius: "var(--radius-sm)",
+              background: "var(--rose-lt)",
+              color: "var(--rose-dk)",
+              fontSize: 12, fontWeight: 500,
+              border: "1px solid rgba(244, 63, 94, .2)",
+            }}>
+              ⚠ {error}
+            </div>
+          )}
 
-        <button onClick={handleSubmit} disabled={loading} style={{
-          width: "100%", marginTop: 20, padding: "13px",
-          background: loading ? "rgba(124,110,255,.5)" : "linear-gradient(135deg, #6C63FF, #4338CA)",
-          border: "none", borderRadius: 12, color: "#fff",
-          fontSize: 15, fontWeight: 700,
-          boxShadow: loading ? "none" : "0 4px 20px rgba(108,99,255,.4)",
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              marginTop: 6,
+              padding: "12px 16px",
+              borderRadius: "var(--radius-sm)",
+              border: "none",
+              background: loading
+                ? "var(--border-2)"
+                : "linear-gradient(135deg, var(--purple) 0%, #A78BFA 100%)",
+              color: "#fff",
+              fontSize: 14, fontWeight: 600,
+              boxShadow: loading ? "none" : "var(--shadow-lg)",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+            }}
+          >
+            {loading ? (
+              <>
+                <span style={{
+                  width: 14, height: 14,
+                  border: "2px solid rgba(255,255,255,.4)",
+                  borderTopColor: "#fff",
+                  borderRadius: "50%",
+                  animation: "spin .8s linear infinite",
+                }} />
+                استنى...
+              </>
+            ) : (
+              <>{isLogin ? "دخول" : "إنشاء الحساب"} →</>
+            )}
+          </button>
+        </form>
+
+        <p style={{
+          marginTop: "1.25rem", textAlign: "center", fontSize: 12, color: "var(--text-3)",
         }}>
-          {loading ? "⏳ جاري..." : mode === "login" ? "دخول 🚀" : "إنشاء الحساب ✨"}
-        </button>
+          {isLogin ? "ما عندكش حساب؟" : "عندك حساب بالفعل؟"}{" "}
+          <button
+            type="button"
+            onClick={() => switchMode(isLogin ? "register" : "login")}
+            style={{
+              background: "none", border: "none",
+              color: "var(--purple)", fontSize: 12, fontWeight: 600, padding: 0,
+            }}
+          >
+            {isLogin ? "أنشئ واحد" : "سجّل دخول"}
+          </button>
+        </p>
       </div>
     </div>
   );
 }
 
-function Field({ label, value, onChange, placeholder, type = "text" }) {
+function Field({ label, icon, type, value, onChange, placeholder, autoComplete }) {
   return (
-    <div>
-      <label style={{ display: "block", fontSize: 12, color: "#8B87C0", marginBottom: 6, fontWeight: 600 }}>{label}</label>
-      <input
-        type={type} value={value} placeholder={placeholder}
-        onChange={e => onChange(e.target.value)}
-        style={{
-          width: "100%", padding: "10px 14px", borderRadius: 10,
-          background: "rgba(255,255,255,.06)", border: "1px solid rgba(124,110,255,.25)",
-          color: "#EAE8FF", fontSize: 14,
-        }}
-      />
-    </div>
+    <label style={{ display: "block" }}>
+      <span style={{
+        display: "block", fontSize: 12, fontWeight: 500,
+        color: "var(--text-2)", marginBottom: 5,
+      }}>{label}</span>
+      <div style={{ position: "relative" }}>
+        <span style={{
+          position: "absolute", right: 12, top: "50%",
+          transform: "translateY(-50%)",
+          fontSize: 14, opacity: 0.6, pointerEvents: "none",
+        }}>{icon}</span>
+        <input
+          type={type} value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          autoComplete={autoComplete}
+          required
+          style={{
+            width: "100%",
+            padding: "11px 36px 11px 12px",
+            border: "1px solid var(--border)",
+            borderRadius: "var(--radius-sm)",
+            background: "var(--bg)",
+            color: "var(--text)",
+            fontSize: 14,
+          }}
+        />
+      </div>
+    </label>
   );
 }
