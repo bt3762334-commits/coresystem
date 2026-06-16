@@ -11,7 +11,6 @@ import Certificates      from "./components/Certificates";
 import DailyReflection   from "./components/DailyReflection";
 import DailyQuote        from "./components/DailyQuote";
 import AuthScreen        from "./components/AuthScreen";
-import "./styles/global.css";
 
 const NAV = [
   { id: "matrix",       icon: "⊞",  label: "المصفوفة"   },
@@ -113,41 +112,73 @@ function AuthenticatedApp({ session, setSession, tab, setTab }) {
   return (
     <div style={{ minHeight: "100vh", position: "relative" }}>
       <D3Background />
-      <header style={{
+
+      {/* Header */}
+      <header className="app-header" style={{
         position: "sticky", top: 0, zIndex: 50,
         background: "linear-gradient(135deg, #6C63FF 0%, #5548E8 50%, #4338CA 100%)",
         boxShadow: "0 4px 32px rgba(108,99,255,.5)",
       }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 1.5rem" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: 68, gap: 12 }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 1.25rem" }}>
+          {/* Top row */}
+          <div className="app-top" style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            height: 68, gap: 12,
+          }}>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <div style={{ width: 42, height: 42, borderRadius: 13, background: "rgba(255,255,255,.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>⊞</div>
+              <div style={{
+                width: 42, height: 42, borderRadius: 13,
+                background: "rgba(255,255,255,.2)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 20, flexShrink: 0,
+              }}>⊞</div>
               <div>
                 <div style={{ fontSize: 17, fontWeight: 800, color: "#fff" }}>Core System</div>
                 <div style={{ fontSize: 10.5, color: "rgba(255,255,255,.7)" }}>AI PRODUCTIVITY OS</div>
               </div>
             </div>
-            <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+
+            <div className="app-pills" style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
               <DailyQuote compact />
               {[
                 { icon: "🔥", val: streak.count + " يوم" },
                 { icon: "✅", val: doneCount + "/" + total },
                 { icon: "⚡", val: activeCT.count + " اليوم" },
               ].map((s, i) => (
-                <span key={i} style={{ background: "rgba(255,255,255,.15)", border: "1px solid rgba(255,255,255,.25)", borderRadius: 20, padding: "4px 12px", fontSize: 12, color: "#fff" }}>
+                <span key={i} className="pill" style={{
+                  background: "rgba(255,255,255,.15)",
+                  border: "1px solid rgba(255,255,255,.25)",
+                  borderRadius: 20, padding: "4px 12px",
+                  fontSize: 12, color: "#fff",
+                }}>
                   {s.icon} <strong>{s.val}</strong>
                 </span>
               ))}
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <div style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(255,255,255,.25)", border: "2px solid rgba(255,255,255,.5)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 15, fontWeight: 700 }}>{session.avatar}</div>
+
+              <div className="user-block" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{
+                  width: 36, height: 36, borderRadius: "50%",
+                  background: "rgba(255,255,255,.25)",
+                  border: "2px solid rgba(255,255,255,.5)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  color: "#fff", fontSize: 15, fontWeight: 700,
+                }}>{session.avatar}</div>
                 <div style={{ display: "flex", flexDirection: "column" }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{session.name}</span>
-                  <button onClick={handleLogout} style={{ background: "none", border: "none", padding: 0, fontSize: 10, color: "rgba(255,255,255,.7)", textDecoration: "underline" }}>تسجيل خروج</button>
+                  <span className="user-name" style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>
+                    {session.name}
+                  </span>
+                  <button onClick={handleLogout} style={{
+                    background: "none", border: "none", padding: 0,
+                    fontSize: 10, color: "rgba(255,255,255,.7)",
+                    textDecoration: "underline",
+                  }}>تسجيل خروج</button>
                 </div>
               </div>
             </div>
           </div>
-          <nav style={{ display: "flex", gap: 2, overflowX: "auto" }}>
+
+          {/* Nav tabs */}
+          <nav className="app-nav" style={{ display: "flex", gap: 2, overflowX: "auto" }}>
             {NAV.map((n) => (
               <button key={n.id} onClick={() => setTab(n.id)} style={{
                 padding: "10px 18px", border: "none",
@@ -156,7 +187,8 @@ function AuthenticatedApp({ session, setSession, tab, setTab }) {
                 color: tab === n.id ? "#fff" : "rgba(255,255,255,.7)",
                 borderRadius: tab === n.id ? "10px 10px 0 0" : 0,
                 borderBottom: tab === n.id ? "2.5px solid #fff" : "2.5px solid transparent",
-                display: "flex", alignItems: "center", gap: 6, whiteSpace: "nowrap",
+                display: "flex", alignItems: "center", gap: 6,
+                whiteSpace: "nowrap", flexShrink: 0,
               }}>
                 <span>{n.icon}</span> {n.label}
               </button>
@@ -164,7 +196,11 @@ function AuthenticatedApp({ session, setSession, tab, setTab }) {
           </nav>
         </div>
       </header>
-      <main style={{ position: "relative", zIndex: 1, maxWidth: 1200, margin: "0 auto", padding: "1.5rem" }}>
+
+      <main style={{
+        position: "relative", zIndex: 1,
+        maxWidth: 1200, margin: "0 auto", padding: "1.25rem 1rem",
+      }}>
         <div key={tab} className="fade-in">
           {tab === "matrix"       && <EisenhowerMatrix tasks={tasks} onDone={handleDone} onAdd={handleAdd} onDelete={handleDelete} />}
           {tab === "pomodoro"     && <PomodoroTimer tasks={allTasks.filter(t => !t.done)} onComplete={updateStreak} session={session} />}
@@ -174,6 +210,40 @@ function AuthenticatedApp({ session, setSession, tab, setTab }) {
           {tab === "reflection"   && <DailyReflection streak={streak} completedToday={activeCT} tasks={allTasks} reflections={reflections} setReflections={setReflections} />}
         </div>
       </main>
+
+      {/* Mobile responsive styles */}
+      <style>{`
+        @media (max-width: 720px) {
+          .app-top { height: 60px !important; gap: 8px !important; }
+          .app-pills { gap: 4px !important; }
+          .app-pills .pill { display: none !important; }
+          .app-nav { padding-bottom: 2px; }
+          .app-nav button {
+            padding: 8px 12px !important;
+            font-size: 12px !important;
+          }
+          .user-block .user-name { display: none !important; }
+          .matrix-grid {
+            grid-template-columns: 1fr !important;
+            grid-template-rows: auto auto auto auto auto !important;
+          }
+          .matrix-grid > div { grid-column: 1 !important; grid-row: auto !important; }
+          .matrix-grid > div:nth-child(1) { grid-row: 1 !important; }
+          .matrix-grid > div:nth-child(2) { grid-row: 2 !important; }
+          .matrix-grid > div:nth-child(3) { 
+            grid-row: 3 !important; 
+            writing-mode: horizontal-tb !important;
+            transform: none !important;
+            border-inline-end: none !important;
+            border-bottom: 2px solid var(--border);
+            padding-inline-end: 0 !important;
+            padding: 8px 0;
+          }
+        }
+        @media (max-width: 480px) {
+          main { padding: 1rem .75rem !important; }
+        }
+      `}</style>
     </div>
   );
 }
