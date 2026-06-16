@@ -1,21 +1,22 @@
 import { useState, useEffect, useRef } from "react";
 import { formatTime } from "../utils/helpers";
+import { useStorage } from "../hooks/useStorage";
 
 const MODES = [
-  { key: "work",       label: "تركيز",        mins: 25, color: "#6C63FF" },
-  { key: "short",      label: "استراحة قصيرة", mins: 5,  color: "#10D98A" },
-  { key: "long",       label: "استراحة طويلة", mins: 15, color: "#F59E0B" },
+  { key: "work",  label: "تركيز",      mins: 25, color: "#6C63FF" },
+  { key: "short", label: "راحة قصيرة", mins: 5,  color: "#10B981" },
+  { key: "long",  label: "راحة طويلة", mins: 15, color: "#F59E0B" },
 ];
 
 export default function PomodoroTimer({ tasks, onComplete, session }) {
-  const [modeIdx, setModeIdx] = useState(0);
-  const [secs, setSecs]       = useState(MODES[0].mins * 60);
-  const [running, setRunning] = useState(false);
-  const [rounds, setRounds]   = useState(0);
-  const [selectedTask, setSelectedTask] = useState(null);
-  const intervalRef = useRef(null);
-
-  const mode = MODES[modeIdx];
+  const [modeIdx, setModeIdx]     = useState(0);
+  const [secs, setSecs]           = useState(MODES[0].mins * 60);
+  const [running, setRunning]     = useState(false);
+  const [cycles, setCycles]       = useState(0);
+  const [selected, setSelected]   = useState("");
+  const [log, setLog]             = useStorage("cs_pomo_log", [], session);
+  const timerRef                  = useRef(null);
+  const mode                      = MODES[modeIdx];
 
   useEffect(() => {
     setSecs(mode.mins * 60);
@@ -24,99 +25,180 @@ export default function PomodoroTimer({ tasks, onComplete, session }) {
 
   useEffect(() => {
     if (running) {
-      intervalRef.current = setInterval(() => {
+      timerRef.current = setInterval(() => {
         setSecs((s) => {
-          if (s <= 1) {
-            clearInterval(intervalRef.current);
-            setRunning(false);
-            if (MODES[modeIdx].key === "work") {
-              setRounds((r) => r + 1);
-              onComplete?.();
-            }
-            try { new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg").play(); } catch {}
-            return 0;
-          }
+          if (s <= 1) { clearInterval(timerRef.current); setRunning(false); finish(); return 0; }
           return s - 1;
         });
       }, 1000);
     } else {
-      clearInterval(intervalRef.current);
+      clearInterval(timerRef.current);
     }
-    return () => clearInterval(intervalRef.current);
-  }, [running, modeIdx]);
+    return () => clearInterval(timerRef.current);
+  }, [running]);
 
-  const pct = secs / (mode.mins * 60);
-  const r = 80, circ = 2 * Math.PI * r;
+  function finish() {
+    if (mode.key !== "work") { setModeIdx(0); return; }
+    const next = cycles + 1;
+    setCycles(next);
+    onComplete?.();
+    setLog((prev) => [
+      { task: selected || "بدون مهمة", time: new Date().toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" }), date: new Date().toLocaleDateString("ar-EG") },
+      ...prev,
+    ].slice(0, 30));
+    setModeIdx(next % 4 === 0 ? 2 : 1);
+  }
+
+  function reset() { setRunning(false); setSecs(mode.mins * 60); }
+
+  const total = mode.mins * 60;
+  const pct   = ((total - secs) / total) * 100;
+  const R     = 84;
+  const circ  = 2 * Math.PI * R;
 
   return (
-    <div style={{ maxWidth: 500, margin: "0 auto" }}>
-      <div style={{ marginBottom: "1.5rem" }}>
-        <h2 style={{ fontSize: 22, fontWeight: 800, color: "#EAE8FF", margin: 0 }}>مؤقت بومودورو</h2>
-        <p style={{ color: "#8B87C0", fontSize: 13, marginTop: 4 }}>🍅 {rounds} جلسة مكتملة اليوم</p>
-      </div>
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: 16 }} className="pomodoro-grid">
 
-      {/* Mode tabs */}
-      <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
-        {MODES.map((m, i) => (
-          <button key={m.key} onClick={() => setModeIdx(i)} style={{
-            flex: 1, padding: "8px", borderRadius: 10, border: "none",
-            background: modeIdx === i ? m.color : "rgba(255,255,255,.07)",
-            color: modeIdx === i ? "#fff" : "#8B87C0",
-            fontWeight: modeIdx === i ? 700 : 400, fontSize: 13,
-          }}>{m.label}</button>
-        ))}
-      </div>
+      <div style={{
+        background: "var(--surface)", border: "1px solid var(--border)",
+        borderRadius: "var(--radius)", padding: 36,
+        display: "flex", flexDirection: "column", alignItems: "center", gap: 24,
+        boxShadow: "var(--shadow-md)",
+      }}>
 
-      {/* Circle timer */}
-      <div style={{ display: "flex", justifyContent: "center", marginBottom: 28 }}>
-        <div style={{ position: "relative", width: 200, height: 200 }}>
-          <svg width="200" height="200" style={{ transform: "rotate(-90deg)" }}>
-            <circle cx="100" cy="100" r={r} fill="none" stroke="rgba(255,255,255,.07)" strokeWidth="10" />
-            <circle cx="100" cy="100" r={r} fill="none" stroke={mode.color}
-              strokeWidth="10" strokeLinecap="round"
-              strokeDasharray={circ} strokeDashoffset={circ * (1 - pct)}
-              style={{ transition: "stroke-dashoffset .5s ease" }} />
+        <div style={{
+          display: "flex", gap: 4, background: "var(--bg)", padding: 4,
+          borderRadius: 24, border: "1px solid var(--border)",
+        }}>
+          {MODES.map((m, i) => (
+            <button key={m.key} onClick={() => setModeIdx(i)}
+              style={{
+                padding: "7px 18px", borderRadius: 20, border: "none", fontSize: 13,
+                background: modeIdx === i ? m.color : "transparent",
+                color: modeIdx === i ? "#fff" : "var(--text-2)",
+                fontWeight: modeIdx === i ? 600 : 400,
+              }}>
+              {m.label}
+            </button>
+          ))}
+        </div>
+
+        <div style={{ position: "relative", width: 210, height: 210 }}>
+          <svg width="210" height="210" style={{ transform: "rotate(-90deg)" }}>
+            <defs>
+              <linearGradient id="ring-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor={mode.color} stopOpacity="1" />
+                <stop offset="100%" stopColor={mode.color} stopOpacity="0.6" />
+              </linearGradient>
+            </defs>
+            <circle cx="105" cy="105" r={R} fill="none" stroke="var(--border)" strokeWidth="10" />
+            <circle cx="105" cy="105" r={R} fill="none" stroke="url(#ring-grad)" strokeWidth="10"
+              strokeDasharray={circ} strokeDashoffset={circ * (1 - pct / 100)}
+              strokeLinecap="round" style={{
+                transition: "stroke-dashoffset .6s ease",
+                filter: `drop-shadow(0 0 8px ${mode.color}66)`,
+              }} />
           </svg>
           <div style={{
-            position: "absolute", inset: 0, display: "flex", flexDirection: "column",
-            alignItems: "center", justifyContent: "center",
+            position: "absolute", inset: 0,
+            display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4,
           }}>
-            <span style={{ fontSize: 38, fontWeight: 800, color: "#EAE8FF", letterSpacing: "-1px" }}>{formatTime(secs)}</span>
+            <span style={{
+              fontSize: 48, fontWeight: 300, letterSpacing: 2,
+              fontVariantNumeric: "tabular-nums", color: "var(--text)",
+            }}>{formatTime(secs)}</span>
             <span style={{ fontSize: 12, color: mode.color, fontWeight: 600 }}>{mode.label}</span>
           </div>
         </div>
+
+        <div style={{ width: "100%", maxWidth: 340 }}>
+          <label style={{
+            fontSize: 12, color: "var(--text-2)",
+            display: "block", marginBottom: 6,
+          }}>المهمة الحالية</label>
+          <select value={selected} onChange={(e) => setSelected(e.target.value)}
+            style={{
+              width: "100%", padding: "9px 12px",
+              border: "1px solid var(--border)", borderRadius: "var(--radius-sm)",
+              background: "var(--bg)", color: "var(--text)", fontSize: 13,
+            }}>
+            <option value="">اختار مهمة...</option>
+            {tasks.map((t, i) => <option key={i} value={t.text}>{t.text}</option>)}
+          </select>
+        </div>
+
+        <div style={{ display: "flex", gap: 10 }}>
+          <button onClick={() => setRunning((r) => !r)}
+            style={{
+              padding: "12px 40px", borderRadius: 24, border: "none",
+              background: running ? "var(--border-2)" : mode.color,
+              color: running ? "var(--text-2)" : "#fff",
+              fontSize: 15, fontWeight: 600,
+              boxShadow: running ? "none" : `0 4px 16px ${mode.color}55`,
+            }}>
+            {running ? "⏸ إيقاف" : "▶ ابدأ"}
+          </button>
+          <button onClick={reset}
+            style={{
+              padding: "12px 20px", borderRadius: 24,
+              border: "1px solid var(--border)",
+              background: "var(--bg)", color: "var(--text-2)", fontSize: 14,
+            }}>
+            ↺
+          </button>
+        </div>
+
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <span style={{ fontSize: 12, color: "var(--text-2)" }}>جلسات اليوم:</span>
+          {Array.from({ length: Math.max(4, cycles) }).map((_, i) => (
+            <div key={i} style={{
+              width: 11, height: 11, borderRadius: "50%",
+              background: i < cycles ? mode.color : "transparent",
+              border: `2px solid ${mode.color}`,
+              transition: "background .3s",
+            }} />
+          ))}
+          <span style={{ fontSize: 13, fontWeight: 600, color: mode.color }}>{cycles}</span>
+        </div>
       </div>
 
-      {/* Controls */}
-      <div style={{ display: "flex", gap: 10, justifyContent: "center", marginBottom: 24 }}>
-        <button onClick={() => setRunning((r) => !r)} style={{
-          padding: "12px 32px", borderRadius: 12, border: "none",
-          background: `linear-gradient(135deg, ${mode.color}, ${mode.color}cc)`,
-          color: "#fff", fontSize: 16, fontWeight: 700,
-          boxShadow: `0 4px 20px ${mode.color}44`,
-        }}>{running ? "⏸ إيقاف" : "▶ ابدأ"}</button>
-        <button onClick={() => { setRunning(false); setSecs(mode.mins * 60); }} style={{
-          padding: "12px 18px", borderRadius: 12, border: "1px solid rgba(255,255,255,.15)",
-          background: "rgba(255,255,255,.07)", color: "#8B87C0", fontSize: 14,
-        }}>↺ إعادة</button>
-      </div>
-
-      {/* Task selector */}
-      {tasks.length > 0 && (
-        <div style={{ background: "rgba(255,255,255,.04)", borderRadius: 12, padding: "1rem" }}>
-          <p style={{ fontSize: 12, color: "#8B87C0", marginBottom: 8, fontWeight: 600 }}>🎯 المهمة الحالية</p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            {tasks.slice(0, 5).map((t) => (
-              <button key={t.id} onClick={() => setSelectedTask(t.id)} style={{
-                padding: "8px 12px", borderRadius: 8, border: "none", textAlign: "right",
-                background: selectedTask === t.id ? "rgba(108,99,255,.25)" : "rgba(255,255,255,.05)",
-                color: selectedTask === t.id ? "#EAE8FF" : "#8B87C0",
-                fontSize: 13, fontWeight: selectedTask === t.id ? 600 : 400,
-              }}>{t.text}</button>
+      <div style={{
+        background: "var(--surface)", border: "1px solid var(--border)",
+        borderRadius: "var(--radius)", padding: 18, boxShadow: "var(--shadow)",
+      }}>
+        <h3 style={{ fontSize: 13, fontWeight: 600, marginBottom: 12, color: "var(--text)" }}>
+          📋 سجل الجلسات
+        </h3>
+        {log.length === 0 ? (
+          <p style={{ fontSize: 12, color: "var(--text-2)", textAlign: "center", padding: "24px 0" }}>
+            ابدأ أول بومودورو! 🍅
+          </p>
+        ) : (
+          <div style={{
+            display: "flex", flexDirection: "column", gap: 7,
+            maxHeight: 440, overflowY: "auto",
+          }}>
+            {log.map((e, i) => (
+              <div key={i} style={{
+                padding: "9px 10px", background: "var(--bg)",
+                borderRadius: "var(--radius-sm)", border: "1px solid var(--border)",
+                borderInlineStart: "3px solid var(--purple)",
+              }}>
+                <div style={{ fontSize: 12, fontWeight: 500 }}>{e.task}</div>
+                <div style={{ fontSize: 11, color: "var(--text-2)", marginTop: 2 }}>
+                  {e.date} · {e.time}
+                </div>
+              </div>
             ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
+
+      <style>{`
+        @media (max-width: 880px) {
+          .pomodoro-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
     </div>
   );
 }
