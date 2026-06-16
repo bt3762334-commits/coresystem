@@ -53,7 +53,10 @@ export async function askAI({ system, messages, signal }) {
       model: "claude-sonnet-4-6",
       max_tokens: 1000,
       system,
-      messages,
+      messages: messages.map(m => ({
+        role: m.role,
+        content: typeof m.content === "string" ? m.content : m.text || "",
+      })),
     }),
     signal,
   });
