@@ -3,9 +3,9 @@ import { flatTasks, monthKey } from "../utils/helpers";
 
 const Q_META = [
   { key: "q1", label: "عاجل ومهم",        color: "#EF4444" },
-  { key: "q2", label: "مهم مش عاجل",      color: "#6C63FF" },
-  { key: "q3", label: "عاجل مش مهم",      color: "#F59E0B" },
-  { key: "q4", label: "مش مهم ومش عاجل",  color: "#94A3B8" },
+  { key: "q2", label: "مهم مش عاجل",      color: "#5E6AD2" },
+  { key: "q3", label: "عاجل مش مهم",      color: "#F0B429" },
+  { key: "q4", label: "مش مهم ومش عاجل",  color: "#8B92A8" },
 ];
 
 const DAYS_AR = ["سبت", "أحد", "إثنين", "ثلاثاء", "أربعاء", "خميس", "جمعة"];
@@ -174,7 +174,7 @@ export default function Analytics({ tasks, streak, completedToday }) {
                   <div style={{
                     width: "100%", height: h,
                     background: d.isToday
-                      ? "linear-gradient(180deg, var(--purple) 0%, #A78BFA 100%)"
+                      ? "linear-gradient(180deg, var(--purple) 0%, #8B95E8 100%)"
                       : d.val > 0
                         ? "linear-gradient(180deg, var(--green) 0%, #34D399 100%)"
                         : "var(--border)",
