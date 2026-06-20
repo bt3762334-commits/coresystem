@@ -43,7 +43,11 @@
   --glow-green:  0 0 30px rgba(16,217,138,.3);
 }
 
-html { direction: rtl; scroll-behavior: smooth; }
+html { direction: rtl; scroll-behavior: smooth; max-width: 100%; overflow-x: hidden; }
+
+img, svg, video { max-width: 100%; height: auto; }
+table { max-width: 100%; }
+.glass, .card, .divine-card { max-width: 100%; }
 
 body {
   font-family: var(--font);
@@ -182,6 +186,10 @@ input:focus, textarea:focus, select:focus {
 
   /* full-width modals */
   [style*="position: fixed"] > div { margin: 0 !important; border-radius: 16px 16px 0 0 !important; max-height: 95vh; overflow-y: auto; }
+}
+
+.cert-printable-body {
+  padding: clamp(18px, 4.5vw, 40px) clamp(20px, 5.5vw, 48px) clamp(16px, 3.5vw, 36px);
 }
 
 @media print {
