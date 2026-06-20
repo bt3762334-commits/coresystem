@@ -11,6 +11,7 @@ import Certificates      from "./components/Certificates";
 import DailyReflection   from "./components/DailyReflection";
 import DailyQuote        from "./components/DailyQuote";
 import AuthScreen        from "./components/AuthScreen";
+import Footer            from "./components/Footer";
 
 const NAV = [
   { id: "matrix",       icon: "⊞",  label: "المصفوفة"   },
@@ -194,7 +195,7 @@ function AuthenticatedApp({ session, setSession, tab, setTab }) {
           {/* Desktop nav tabs */}
           <nav className="app-nav-desktop" style={{ display: "flex", gap: 2, overflowX: "auto" }}>
             {NAV.map((n) => (
-              <button key={n.id} onClick={() => handleNavClick(n.id)} style={{
+              <button key={n.id} onClick={() => setTab(n.id)} style={{
                 padding: "10px 18px", border: "none",
                 background: tab === n.id ? "rgba(255,255,255,.2)" : "transparent",
                 fontSize: 13, fontWeight: tab === n.id ? 700 : 400,
@@ -250,6 +251,8 @@ function AuthenticatedApp({ session, setSession, tab, setTab }) {
           {tab === "reflection"   && <DailyReflection streak={streak} completedToday={activeCT} tasks={allTasks} reflections={reflections} setReflections={setReflections} />}
         </div>
       </main>
+
+      <Footer />
 
       <style>{`
         @media (max-width: 720px) {
