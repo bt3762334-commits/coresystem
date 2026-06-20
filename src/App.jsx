@@ -121,10 +121,13 @@ function AuthenticatedApp({ session, setSession, tab, setTab }) {
       <D3Background />
 
       {/* Header */}
-      <header className="app-header" style={{
+      <header className="app-header glass" style={{
         position: "sticky", top: 0, zIndex: 50,
-        background: "linear-gradient(135deg, #6C63FF 0%, #5548E8 50%, #4338CA 100%)",
-        boxShadow: "0 4px 32px rgba(108,99,255,.5)",
+        background: "rgba(10,12,18,.78)",
+        backdropFilter: "blur(20px) saturate(140%)",
+        WebkitBackdropFilter: "blur(20px) saturate(140%)",
+        borderBottom: "1px solid var(--border)",
+        boxShadow: "0 1px 0 rgba(255,255,255,.03), 0 12px 32px rgba(0,0,0,.35)",
       }}>
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 1.25rem" }}>
 
@@ -136,14 +139,15 @@ function AuthenticatedApp({ session, setSession, tab, setTab }) {
             {/* Logo */}
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <div style={{
-                width: 42, height: 42, borderRadius: 13,
-                background: "rgba(255,255,255,.2)",
+                width: 40, height: 40, borderRadius: 12,
+                background: "linear-gradient(145deg, var(--purple), #4F5BC4)",
+                boxShadow: "0 4px 16px rgba(94,106,210,.35)",
                 display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 20, flexShrink: 0,
+                fontSize: 18, flexShrink: 0, color: "#fff",
               }}>⊞</div>
               <div>
-                <div style={{ fontSize: 17, fontWeight: 800, color: "#fff" }}>Core System</div>
-                <div style={{ fontSize: 10.5, color: "rgba(255,255,255,.7)" }}>AI PRODUCTIVITY OS</div>
+                <div style={{ fontSize: 16.5, fontWeight: 800, color: "var(--text)", letterSpacing: "-0.01em" }}>Core System</div>
+                <div style={{ fontSize: 10, fontWeight: 600, color: "var(--text-3)", letterSpacing: ".06em" }}>AI PRODUCTIVITY OS</div>
               </div>
             </div>
 
@@ -152,28 +156,27 @@ function AuthenticatedApp({ session, setSession, tab, setTab }) {
               <DailyQuote compact />
               {stats.map((s, i) => (
                 <span key={i} style={{
-                  background: "rgba(255,255,255,.15)",
-                  border: "1px solid rgba(255,255,255,.25)",
+                  background: "var(--surface-2)",
+                  border: "1px solid var(--border)",
                   borderRadius: 20, padding: "4px 12px",
-                  fontSize: 12, color: "#fff",
+                  fontSize: 12, color: "var(--text-2)",
                 }}>
-                  {s.icon} <strong>{s.val}</strong>
+                  {s.icon} <strong style={{ color: "var(--text)" }}>{s.val}</strong>
                 </span>
               ))}
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, paddingInlineStart: 8, borderInlineStart: "1px solid var(--border)" }}>
                 <div style={{
-                  width: 36, height: 36, borderRadius: "50%",
-                  background: "rgba(255,255,255,.25)",
-                  border: "2px solid rgba(255,255,255,.5)",
+                  width: 34, height: 34, borderRadius: "50%",
+                  background: "linear-gradient(145deg, var(--purple), #4F5BC4)",
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  color: "#fff", fontSize: 15, fontWeight: 700,
+                  color: "#fff", fontSize: 14, fontWeight: 700,
                 }}>{session.avatar}</div>
                 <div style={{ display: "flex", flexDirection: "column" }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{session.name}</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>{session.name}</span>
                   <button onClick={handleLogout} style={{
                     background: "none", border: "none", padding: 0,
-                    fontSize: 10, color: "rgba(255,255,255,.7)",
-                    textDecoration: "underline",
+                    fontSize: 10, color: "var(--text-3)",
+                    textAlign: "start",
                   }}>تسجيل خروج</button>
                 </div>
               </div>
@@ -182,13 +185,12 @@ function AuthenticatedApp({ session, setSession, tab, setTab }) {
             {/* Mobile: avatar only */}
             <div className="app-mobile-right" style={{ display: "none", alignItems: "center", gap: 8 }}>
               <div style={{
-                width: 32, height: 32, borderRadius: "50%",
-                background: "rgba(255,255,255,.25)",
-                border: "2px solid rgba(255,255,255,.5)",
+                width: 30, height: 30, borderRadius: "50%",
+                background: "linear-gradient(145deg, var(--purple), #4F5BC4)",
                 display: "flex", alignItems: "center", justifyContent: "center",
-                color: "#fff", fontSize: 13, fontWeight: 700, flexShrink: 0,
+                color: "#fff", fontSize: 12.5, fontWeight: 700, flexShrink: 0,
               }}>{session.avatar}</div>
-              <span style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{session.name}</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>{session.name}</span>
             </div>
           </div>
 
@@ -197,11 +199,10 @@ function AuthenticatedApp({ session, setSession, tab, setTab }) {
             {NAV.map((n) => (
               <button key={n.id} onClick={() => setTab(n.id)} style={{
                 padding: "10px 18px", border: "none",
-                background: tab === n.id ? "rgba(255,255,255,.2)" : "transparent",
-                fontSize: 13, fontWeight: tab === n.id ? 700 : 400,
-                color: tab === n.id ? "#fff" : "rgba(255,255,255,.7)",
-                borderRadius: tab === n.id ? "10px 10px 0 0" : 0,
-                borderBottom: tab === n.id ? "2.5px solid #fff" : "2.5px solid transparent",
+                background: "transparent",
+                fontSize: 13, fontWeight: tab === n.id ? 700 : 500,
+                color: tab === n.id ? "var(--text)" : "var(--text-3)",
+                borderBottom: tab === n.id ? "2px solid var(--purple)" : "2px solid transparent",
                 display: "flex", alignItems: "center", gap: 6,
                 whiteSpace: "nowrap", flexShrink: 0, cursor: "pointer",
               }}>
@@ -220,7 +221,7 @@ function AuthenticatedApp({ session, setSession, tab, setTab }) {
             flex: 1, border: "none", background: "none",
             display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
             gap: 3, padding: "6px 2px", cursor: "pointer",
-            color: tab === n.id ? "#6C63FF" : "rgba(255,255,255,.5)",
+            color: tab === n.id ? "var(--purple-dk)" : "var(--text-3)",
           }}>
             <span style={{ fontSize: 20, lineHeight: 1 }}>{n.icon}</span>
             <span style={{
@@ -231,8 +232,9 @@ function AuthenticatedApp({ session, setSession, tab, setTab }) {
             {tab === n.id && (
               <span style={{
                 width: 4, height: 4, borderRadius: "50%",
-                background: "#6C63FF", display: "block",
+                background: "var(--purple)", display: "block",
               }} />
+
             )}
           </button>
         ))}
@@ -263,9 +265,9 @@ function AuthenticatedApp({ session, setSession, tab, setTab }) {
             display: flex !important;
             position: fixed; bottom: 0; left: 0; right: 0;
             z-index: 100;
-            background: rgba(20, 15, 60, 0.97);
-            backdrop-filter: blur(12px);
-            border-top: 1px solid rgba(108,99,255,0.35);
+            background: rgba(10, 12, 18, 0.92);
+            backdrop-filter: blur(20px) saturate(140%);
+            border-top: 1px solid var(--border);
             box-shadow: 0 -4px 24px rgba(0,0,0,0.4);
             height: 62px;
             padding-bottom: env(safe-area-inset-bottom, 0px);
