@@ -3,9 +3,9 @@ import { formatTime } from "../utils/helpers";
 import { useStorage } from "../hooks/useStorage";
 
 const MODES = [
-  { key: "work",  label: "تركيز",      mins: 25, color: "#6C63FF" },
-  { key: "short", label: "راحة قصيرة", mins: 5,  color: "#10B981" },
-  { key: "long",  label: "راحة طويلة", mins: 15, color: "#F59E0B" },
+  { key: "work",  label: "تركيز",      mins: 25, color: "#5E6AD2" },
+  { key: "short", label: "راحة قصيرة", mins: 5,  color: "#14B8A6" },
+  { key: "long",  label: "راحة طويلة", mins: 15, color: "#F0B429" },
 ];
 
 export default function PomodoroTimer({ tasks, onComplete, session }) {
