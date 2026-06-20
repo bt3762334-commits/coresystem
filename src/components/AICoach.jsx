@@ -146,7 +146,7 @@ export default function AICoach({ tasks, streak, completedToday, onDistributeTas
         }}>
           <div style={{
             width: 36, height: 36, borderRadius: "50%",
-            background: "linear-gradient(135deg, var(--purple) 0%, #A78BFA 100%)",
+            background: "linear-gradient(135deg, var(--purple) 0%, #8B95E8 100%)",
             display: "flex", alignItems: "center", justifyContent: "center",
             fontSize: 18, color: "#fff",
             boxShadow: "0 4px 12px rgba(108,99,255,.3)",
@@ -171,7 +171,7 @@ export default function AICoach({ tasks, streak, completedToday, onDistributeTas
               <div style={{
                 maxWidth: "84%", padding: "10px 14px",
                 borderRadius: m.role === "user" ? "16px 16px 16px 4px" : "16px 16px 4px 16px",
-                background: m.role === "user" ? "var(--bg)" : "linear-gradient(135deg, var(--purple) 0%, #7C72FF 100%)",
+                background: m.role === "user" ? "var(--bg)" : "linear-gradient(135deg, var(--purple) 0%, #5E6AD2 100%)",
                 color: m.role === "user" ? "var(--text)" : "#fff",
                 border: m.role === "user" ? "1px solid var(--border)" : "none",
                 fontSize: 13, lineHeight: 1.7, whiteSpace: "pre-wrap",
@@ -183,7 +183,7 @@ export default function AICoach({ tasks, streak, completedToday, onDistributeTas
             <div style={{ display: "flex", justifyContent: "flex-end" }}>
               <div style={{
                 padding: "12px 16px", borderRadius: "16px 16px 4px 16px",
-                background: "linear-gradient(135deg, var(--purple) 0%, #7C72FF 100%)",
+                background: "linear-gradient(135deg, var(--purple) 0%, #5E6AD2 100%)",
                 display: "flex", gap: 5, alignItems: "center",
               }}>
                 {[0, 1, 2].map((i) => (
@@ -240,7 +240,7 @@ export default function AICoach({ tasks, streak, completedToday, onDistributeTas
             style={{
               width: 38, height: 38, borderRadius: "50%",
               border: "none",
-              background: "linear-gradient(135deg, var(--purple) 0%, #A78BFA 100%)",
+              background: "linear-gradient(135deg, var(--purple) 0%, #8B95E8 100%)",
               color: "#fff", fontSize: 18,
               display: "flex", alignItems: "center", justifyContent: "center",
               flexShrink: 0,
