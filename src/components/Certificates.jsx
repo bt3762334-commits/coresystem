@@ -371,6 +371,7 @@ function CertificateModal({ data, issuedAt, onClose }) {
           {/* ── Certificate body ── */}
           <div
             id="certificate-printable"
+            className="cert-printable-body"
             style={{
               position: "relative",
               background: `
@@ -378,10 +379,11 @@ function CertificateModal({ data, issuedAt, onClose }) {
                 radial-gradient(ellipse 70% 50% at 85% 85%, #0A2E22 0%, transparent 50%),
                 linear-gradient(145deg, #080714 0%, #0D0B1E 40%, #080714 100%)
               `,
-              padding: "40px 48px 36px",
               color: "#EAE8FF",
-              minHeight: 520,
+              aspectRatio: "860 / 520",
               overflow: "hidden",
+              display: "flex",
+              flexDirection: "column",
             }}
           >
             {/* Stars bg */}
