@@ -10,8 +10,8 @@ const TEMPLATES = [
     description: "for successfully completing your first 10 tasks and laying the foundation of your productive journey.",
     icon: "🌟",
     required: 10,
-    color: "#7C6EFF",
-    color2: "#10D98A",
+    color: "#5E6AD2",
+    color2: "#14B8A6",
   },
   {
     id: "first50",
@@ -20,8 +20,8 @@ const TEMPLATES = [
     description: "for reaching 50 completed tasks — a milestone that reflects your commitment and discipline.",
     icon: "🥉",
     required: 50,
-    color: "#7C6EFF",
-    color2: "#10D98A",
+    color: "#5E6AD2",
+    color2: "#14B8A6",
   },
   {
     id: "first100",
@@ -30,8 +30,8 @@ const TEMPLATES = [
     description: "for completing 100 tasks. This achievement reflects your dedication to personal growth and consistency.",
     icon: "🥈",
     required: 100,
-    color: "#7C6EFF",
-    color2: "#10D98A",
+    color: "#5E6AD2",
+    color2: "#14B8A6",
   },
   {
     id: "monthly",
@@ -40,8 +40,8 @@ const TEMPLATES = [
     description: "for achieving 30 tasks within a single month — proving that consistency builds greatness.",
     icon: "📅",
     required: 30,
-    color: "#7C6EFF",
-    color2: "#10D98A",
+    color: "#5E6AD2",
+    color2: "#14B8A6",
     monthly: true,
   },
 ];
@@ -114,7 +114,7 @@ export default function Certificates({ session, tasks, streak, certificates, onI
       <div className="divine-card" style={{ padding: "28px 32px", color: "#fff", position: "relative", overflow: "hidden" }}>
         <div style={{
           position: "absolute", inset: 0, opacity: .12,
-          backgroundImage: "radial-gradient(circle at 20% 20%, #7C6EFF 0%, transparent 50%), radial-gradient(circle at 80% 80%, #10D98A 0%, transparent 50%)",
+          backgroundImage: "radial-gradient(circle at 20% 20%, #5E6AD2 0%, transparent 50%), radial-gradient(circle at 80% 80%, #14B8A6 0%, transparent 50%)",
         }} />
         <div style={{ position: "relative" }}>
           <div style={{ fontSize: 12, opacity: .85, marginBottom: 6, letterSpacing: ".15em", textTransform: "uppercase", fontWeight: 700 }}>
@@ -243,8 +243,8 @@ function CertificateCard({ cert, onView }) {
     }}>
       <div style={{
         height: 140,
-        background: "linear-gradient(135deg, #0D0B1E 0%, #1A1740 50%, #110F26 100%)",
-        borderBottom: `2px solid ${cert.color || "#7C6EFF"}55`,
+        background: "linear-gradient(135deg, #0F1320 0%, #1A1F2E 50%, #131720 100%)",
+        borderBottom: `2px solid ${cert.color || "#5E6AD2"}55`,
         display: "flex", alignItems: "center", justifyContent: "center",
         position: "relative", overflow: "hidden",
       }}>
@@ -265,14 +265,14 @@ function CertificateCard({ cert, onView }) {
 }
 
 // ─── DarkByte Stamp ──────────────────────────────────────
-function DarkByteStamp({ size = 100, color = "#7C6EFF" }) {
+function DarkByteStamp({ size = 100, color = "#5E6AD2" }) {
   return (
     <svg width={size} height={size} viewBox="0 0 100 100" style={{ display: "block" }}>
       <defs>
         <path id="dbcircle2" d="M 50,50 m -40,0 a 40,40 0 1,1 80,0 a 40,40 0 1,1 -80,0" />
         <linearGradient id="dbgrad2" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#7C6EFF" />
-          <stop offset="100%" stopColor="#10D98A" />
+          <stop offset="0%" stopColor="#5E6AD2" />
+          <stop offset="100%" stopColor="#14B8A6" />
         </linearGradient>
       </defs>
       <circle cx="50" cy="50" r="46" fill="none" stroke="url(#dbgrad2)" strokeWidth="2" />
@@ -282,7 +282,7 @@ function DarkByteStamp({ size = 100, color = "#7C6EFF" }) {
       </text>
       <g transform="translate(50, 50)">
         <polygon points="0,-16 5,-5 16,-5 7,3 10,15 0,8 -10,15 -7,3 -16,-5 -5,-5" fill="url(#dbgrad2)" opacity="0.9" />
-        <text x="0" y="3" textAnchor="middle" fontSize="7" fontWeight="900" fill="#0D0B1E" fontFamily="monospace" letterSpacing="0.5">DB</text>
+        <text x="0" y="3" textAnchor="middle" fontSize="7" fontWeight="900" fill="#0F1320" fontFamily="monospace" letterSpacing="0.5">DB</text>
       </g>
       <circle cx="14" cy="22" r="1.2" fill={color} opacity="0.4" />
       <circle cx="86" cy="78" r="1" fill={color} opacity="0.5" />
@@ -296,13 +296,13 @@ function DarkByteStamp({ size = 100, color = "#7C6EFF" }) {
 function Corner({ style }) {
   return (
     <svg width="70" height="70" viewBox="0 0 70 70" style={{ position: "absolute", opacity: 0.55, ...style }}>
-      <line x1="5" y1="5" x2="60" y2="5" stroke="#A89BFF" strokeWidth="1.5" />
-      <line x1="5" y1="5" x2="5" y2="60" stroke="#A89BFF" strokeWidth="1.5" />
-      <line x1="5" y1="5" x2="28" y2="5" stroke="#10D98A" strokeWidth="1" />
-      <line x1="5" y1="5" x2="5" y2="28" stroke="#10D98A" strokeWidth="1" />
-      <circle cx="5" cy="5" r="3.5" fill="#7C6EFF" />
-      <circle cx="28" cy="5" r="2" fill="#10D98A" />
-      <circle cx="5" cy="28" r="2" fill="#10D98A" />
+      <line x1="5" y1="5" x2="60" y2="5" stroke="#8B95E8" strokeWidth="1.5" />
+      <line x1="5" y1="5" x2="5" y2="60" stroke="#8B95E8" strokeWidth="1.5" />
+      <line x1="5" y1="5" x2="28" y2="5" stroke="#14B8A6" strokeWidth="1" />
+      <line x1="5" y1="5" x2="5" y2="28" stroke="#14B8A6" strokeWidth="1" />
+      <circle cx="5" cy="5" r="3.5" fill="#5E6AD2" />
+      <circle cx="28" cy="5" r="2" fill="#14B8A6" />
+      <circle cx="5" cy="28" r="2" fill="#14B8A6" />
     </svg>
   );
 }
@@ -313,14 +313,14 @@ function Globe({ size = 64 }) {
     <svg width={size} height={size} viewBox="0 0 80 80" style={{ display: "block" }}>
       <defs>
         <radialGradient id="gglobe" cx="40%" cy="35%" r="60%">
-          <stop offset="0%" stopColor="#C4B5FD" />
-          <stop offset="60%" stopColor="#7C6EFF" />
+          <stop offset="0%" stopColor="#B4BBEF" />
+          <stop offset="60%" stopColor="#5E6AD2" />
           <stop offset="100%" stopColor="#312E81" />
         </radialGradient>
         <linearGradient id="gglow" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#7C6EFF" stopOpacity="0" />
-          <stop offset="50%" stopColor="#A89BFF" stopOpacity="0.9" />
-          <stop offset="100%" stopColor="#10D98A" stopOpacity="0" />
+          <stop offset="0%" stopColor="#5E6AD2" stopOpacity="0" />
+          <stop offset="50%" stopColor="#8B95E8" stopOpacity="0.9" />
+          <stop offset="100%" stopColor="#14B8A6" stopOpacity="0" />
         </linearGradient>
       </defs>
       <circle cx="40" cy="40" r="30" fill="url(#gglobe)" />
@@ -337,8 +337,8 @@ function Globe({ size = 64 }) {
 // ─── Full Certificate Modal ───────────────────────────────
 function CertificateModal({ data, issuedAt, onClose }) {
   const cert = data;
-  const certColor = cert.color || "#7C6EFF";
-  const certColor2 = cert.color2 || "#10D98A";
+  const certColor = cert.color || "#5E6AD2";
+  const certColor2 = cert.color2 || "#14B8A6";
   const issueDate = new Date(issuedAt || cert.issuedAt || cert.date || Date.now());
   const formattedDate = issueDate.toLocaleDateString("en-US", { day: "2-digit", month: "short", year: "numeric" });
 
@@ -375,11 +375,11 @@ function CertificateModal({ data, issuedAt, onClose }) {
             style={{
               position: "relative",
               background: `
-                radial-gradient(ellipse 90% 70% at 15% 15%, #2D1B6E 0%, transparent 55%),
-                radial-gradient(ellipse 70% 50% at 85% 85%, #0A2E22 0%, transparent 50%),
-                linear-gradient(145deg, #080714 0%, #0D0B1E 40%, #080714 100%)
+                radial-gradient(ellipse 90% 70% at 15% 15%, #262B45 0%, transparent 55%),
+                radial-gradient(ellipse 70% 50% at 85% 85%, #0F2A27 0%, transparent 50%),
+                linear-gradient(145deg, #0B0E14 0%, #0F1320 40%, #0B0E14 100%)
               `,
-              color: "#EAE8FF",
+              color: "#F1F3F8",
               aspectRatio: "860 / 520",
               overflow: "hidden",
               display: "flex",
@@ -395,18 +395,18 @@ function CertificateModal({ data, issuedAt, onClose }) {
 
             {/* Geometric network lines (cert 1 style) */}
             <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0.12, pointerEvents: "none" }} viewBox="0 0 860 520" preserveAspectRatio="none">
-              <line x1="0" y1="0" x2="200" y2="150" stroke="#7C6EFF" strokeWidth="0.8" />
-              <line x1="200" y1="150" x2="100" y2="300" stroke="#7C6EFF" strokeWidth="0.8" />
-              <line x1="200" y1="150" x2="350" y2="80" stroke="#10D98A" strokeWidth="0.8" />
-              <line x1="860" y1="0" x2="660" y2="140" stroke="#7C6EFF" strokeWidth="0.8" />
-              <line x1="660" y1="140" x2="760" y2="300" stroke="#7C6EFF" strokeWidth="0.8" />
-              <line x1="660" y1="140" x2="500" y2="60" stroke="#10D98A" strokeWidth="0.8" />
-              <line x1="0" y1="520" x2="180" y2="380" stroke="#7C6EFF" strokeWidth="0.8" />
-              <line x1="860" y1="520" x2="680" y2="380" stroke="#7C6EFF" strokeWidth="0.8" />
-              <circle cx="200" cy="150" r="3" fill="#7C6EFF" opacity="0.6" />
-              <circle cx="660" cy="140" r="3" fill="#7C6EFF" opacity="0.6" />
-              <circle cx="180" cy="380" r="2.5" fill="#10D98A" opacity="0.5" />
-              <circle cx="680" cy="380" r="2.5" fill="#10D98A" opacity="0.5" />
+              <line x1="0" y1="0" x2="200" y2="150" stroke="#5E6AD2" strokeWidth="0.8" />
+              <line x1="200" y1="150" x2="100" y2="300" stroke="#5E6AD2" strokeWidth="0.8" />
+              <line x1="200" y1="150" x2="350" y2="80" stroke="#14B8A6" strokeWidth="0.8" />
+              <line x1="860" y1="0" x2="660" y2="140" stroke="#5E6AD2" strokeWidth="0.8" />
+              <line x1="660" y1="140" x2="760" y2="300" stroke="#5E6AD2" strokeWidth="0.8" />
+              <line x1="660" y1="140" x2="500" y2="60" stroke="#14B8A6" strokeWidth="0.8" />
+              <line x1="0" y1="520" x2="180" y2="380" stroke="#5E6AD2" strokeWidth="0.8" />
+              <line x1="860" y1="520" x2="680" y2="380" stroke="#5E6AD2" strokeWidth="0.8" />
+              <circle cx="200" cy="150" r="3" fill="#5E6AD2" opacity="0.6" />
+              <circle cx="660" cy="140" r="3" fill="#5E6AD2" opacity="0.6" />
+              <circle cx="180" cy="380" r="2.5" fill="#14B8A6" opacity="0.5" />
+              <circle cx="680" cy="380" r="2.5" fill="#14B8A6" opacity="0.5" />
             </svg>
 
             {/* Corners */}
@@ -433,7 +433,7 @@ function CertificateModal({ data, issuedAt, onClose }) {
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginBottom: 4,
               }}>
                 <div style={{ height: 1, width: 60, background: `linear-gradient(90deg, transparent, ${certColor})` }} />
-                <span style={{ fontSize: 12, letterSpacing: ".4em", color: "#8B87C0", fontFamily: "monospace", fontWeight: 600 }}>OF COMPLETION</span>
+                <span style={{ fontSize: 12, letterSpacing: ".4em", color: "#8B92A8", fontFamily: "monospace", fontWeight: 600 }}>OF COMPLETION</span>
                 <div style={{ height: 1, width: 60, background: `linear-gradient(90deg, ${certColor}, transparent)` }} />
               </div>
             </div>
@@ -446,7 +446,7 @@ function CertificateModal({ data, issuedAt, onClose }) {
 
             {/* Body */}
             <div style={{ textAlign: "center", marginBottom: 24, padding: "0 20px" }}>
-              <div style={{ fontSize: 11, color: "#8B87C0", letterSpacing: ".3em", fontFamily: "monospace", fontWeight: 600, marginBottom: 10 }}>
+              <div style={{ fontSize: 11, color: "#8B92A8", letterSpacing: ".3em", fontFamily: "monospace", fontWeight: 600, marginBottom: 10 }}>
                 THIS CERTIFICATE IS PROUDLY PRESENTED TO
               </div>
               <div style={{
@@ -458,7 +458,7 @@ function CertificateModal({ data, issuedAt, onClose }) {
                 {cert.userName}
               </div>
               <p style={{
-                fontSize: 13, lineHeight: 1.75, color: "#C4C0FF",
+                fontSize: 13, lineHeight: 1.75, color: "#C7CCF0",
                 fontFamily: "Georgia, serif", margin: "0 auto 10px",
                 fontStyle: "italic", maxWidth: 540,
               }}>
@@ -485,9 +485,9 @@ function CertificateModal({ data, issuedAt, onClose }) {
                   background: `linear-gradient(135deg, ${certColor}22, ${certColor2}11)`,
                   border: `1px solid ${certColor}55`, borderRadius: 30,
                 }}>
-                  <span style={{ fontSize: 11, color: "#8B87C0", fontFamily: "monospace" }}>with </span>
+                  <span style={{ fontSize: 11, color: "#8B92A8", fontFamily: "monospace" }}>with </span>
                   <span style={{ fontSize: 22, fontWeight: 800, color: certColor, fontFamily: "Georgia, serif" }}>{cert.stats.lifetime}</span>
-                  <span style={{ fontSize: 11, color: "#8B87C0", fontFamily: "monospace" }}> tasks completed on Core System</span>
+                  <span style={{ fontSize: 11, color: "#8B92A8", fontFamily: "monospace" }}> tasks completed on Core System</span>
                 </div>
               )}
               {cert.stats?.monthDone && (
@@ -496,9 +496,9 @@ function CertificateModal({ data, issuedAt, onClose }) {
                   background: `linear-gradient(135deg, ${certColor}22, ${certColor2}11)`,
                   border: `1px solid ${certColor}55`, borderRadius: 30,
                 }}>
-                  <span style={{ fontSize: 11, color: "#8B87C0", fontFamily: "monospace" }}>with </span>
+                  <span style={{ fontSize: 11, color: "#8B92A8", fontFamily: "monospace" }}>with </span>
                   <span style={{ fontSize: 22, fontWeight: 800, color: certColor, fontFamily: "Georgia, serif" }}>{cert.stats.monthDone}</span>
-                  <span style={{ fontSize: 11, color: "#8B87C0", fontFamily: "monospace" }}> tasks in {cert.stats.month}</span>
+                  <span style={{ fontSize: 11, color: "#8B92A8", fontFamily: "monospace" }}> tasks in {cert.stats.month}</span>
                 </div>
               )}
             </div>
@@ -520,7 +520,7 @@ function CertificateModal({ data, issuedAt, onClose }) {
                   textShadow: `0 0 16px ${certColor}88`,
                   display: "inline-block",
                 }}>Basem Taha</div>
-                <div style={{ fontSize: 9, color: "#8B87C0", letterSpacing: ".2em", fontFamily: "monospace", fontWeight: 600 }}>
+                <div style={{ fontSize: 9, color: "#8B92A8", letterSpacing: ".2em", fontFamily: "monospace", fontWeight: 600 }}>
                   FOUNDER · DARKBYTE
                 </div>
               </div>
@@ -535,7 +535,7 @@ function CertificateModal({ data, issuedAt, onClose }) {
                   fontWeight: 700, borderBottom: "1.5px solid rgba(255,255,255,.3)",
                   paddingBottom: 4, marginBottom: 8, letterSpacing: ".1em",
                 }}>{formattedDate}</div>
-                <div style={{ fontSize: 9, color: "#8B87C0", letterSpacing: ".2em", fontFamily: "monospace", fontWeight: 600 }}>DATE ISSUED</div>
+                <div style={{ fontSize: 9, color: "#8B92A8", letterSpacing: ".2em", fontFamily: "monospace", fontWeight: 600 }}>DATE ISSUED</div>
               </div>
             </div>
 
