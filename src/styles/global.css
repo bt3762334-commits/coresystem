@@ -1,47 +1,58 @@
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Cairo:wght@300;400;500;600;700;800;900&display=swap');
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --font:       "Cairo", system-ui, sans-serif;
-  --purple:     #7C6EFF;
-  --purple-lt:  #2A2460;
-  --purple-dk:  #A89BFF;
-  --green:      #10D98A;
-  --green-lt:   #0A2E22;
-  --green-dk:   #5EFFC7;
-  --amber:      #F59E0B;
-  --amber-lt:   #2E1E05;
-  --amber-dk:   #FCD34D;
-  --slate:      #94A3B8;
-  --slate-lt:   #1A2035;
-  --slate-dk:   #CBD5E1;
+  /* Typography: Plus Jakarta Sans for Latin/UI chrome, Cairo for Arabic content */
+  --font:       "Cairo", "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-ui:    "Plus Jakarta Sans", "Cairo", system-ui, sans-serif;
 
-  --bg:         #080714;
-  --bg-2:       #0D0B1E;
-  --surface:    #110F26;
-  --surface-2:  #1A1740;
-  --border:     #2A2650;
-  --border-2:   #3D3870;
-  --text:       #EAE8FF;
-  --text-2:     #8B87C0;
-  --text-3:     #5A5680;
+  /* Brand */
+  --purple:     #5E6AD2;
+  --purple-lt:  #1B1F30;
+  --purple-dk:  #8B95E8;
+  --green:      #14B8A6;
+  --green-lt:   #122A28;
+  --green-dk:   #5EEAD4;
+  --amber:      #E8A33D;
+  --amber-lt:   #2B2212;
+  --amber-dk:   #F2C572;
+  --danger:     #E5484D;
+  --danger-lt:  #2B1518;
+  --slate:      #8B92A8;
+  --slate-lt:   #1A1E2B;
+  --slate-dk:   #C3C9DA;
 
-  --nav-bg:     #6C63FF;
-  --nav-bg-2:   #5548E8;
-  --nav-text:   #FFFFFF;
-  --nav-text-2: rgba(255,255,255,0.75);
+  /* Surfaces — calm charcoal-navy, not saturated purple-black */
+  --bg:         #0A0C12;
+  --bg-2:       #0E111A;
+  --surface:    #12151F;
+  --surface-2:  #181C29;
+  --surface-3:  #1F2433;
+  --border:     #232838;
+  --border-2:   #2E3447;
+  --text:       #EDEFF5;
+  --text-2:     #9499AE;
+  --text-3:     #5C6378;
+
+  --nav-bg:     #14172278;
+  --nav-text:   #EDEFF5;
+  --nav-text-2: rgba(237,239,245,0.62);
 
   --radius:     14px;
-  --radius-sm:  9px;
-  --radius-lg:  20px;
-  --shadow:     0 2px 8px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.3);
-  --shadow-md:  0 4px 20px rgba(108,99,255,.25);
-  --shadow-lg:  0 12px 48px rgba(108,99,255,.3);
+  --radius-sm:  10px;
+  --radius-lg:  22px;
+  --shadow-sm:  0 1px 2px rgba(0,0,0,.5);
+  --shadow:     0 1px 3px rgba(0,0,0,.45), 0 6px 18px rgba(0,0,0,.35);
+  --shadow-md:  0 8px 28px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.03);
+  --shadow-lg:  0 20px 60px rgba(0,0,0,.55);
 
-  --glow-purple: 0 0 30px rgba(124,110,255,.4);
-  --glow-green:  0 0 30px rgba(16,217,138,.3);
+  --glow-purple: 0 0 28px rgba(94,106,210,.35);
+  --glow-green:  0 0 28px rgba(20,184,166,.28);
+
+  --ease: cubic-bezier(.4,0,.2,1);
 }
+
 
 html { direction: rtl; scroll-behavior: smooth; max-width: 100%; overflow-x: hidden; }
 
@@ -54,36 +65,76 @@ body {
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
-  line-height: 1.6;
+  line-height: 1.65;
+  letter-spacing: -0.01em;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
   background-image:
-    radial-gradient(ellipse 80% 50% at 20% 10%, rgba(108,99,255,.12) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 40% at 80% 90%, rgba(16,185,129,.07) 0%, transparent 50%);
+    radial-gradient(ellipse 70% 45% at 15% 0%, rgba(94,106,210,.10) 0%, transparent 60%),
+    radial-gradient(ellipse 55% 35% at 85% 100%, rgba(20,184,166,.06) 0%, transparent 55%);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
 }
 
 button {
   cursor: pointer;
   font-family: var(--font);
-  transition: opacity .15s, transform .1s, background .15s, box-shadow .2s;
+  transition: opacity .15s var(--ease), transform .12s var(--ease), background .18s var(--ease), box-shadow .2s var(--ease), border-color .18s var(--ease);
 }
 button:active  { transform: scale(.97); }
 button:disabled { opacity: .5; cursor: not-allowed; transform: none; }
 
+.btn-primary {
+  background: linear-gradient(135deg, var(--purple), #4F5BC4);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  box-shadow: var(--shadow-sm), 0 0 0 1px rgba(94,106,210,.15);
+}
+.btn-primary:hover:not(:disabled) {
+  box-shadow: var(--glow-purple), var(--shadow);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+.btn-secondary:hover:not(:disabled) {
+  background: var(--surface-3);
+  border-color: var(--purple);
+}
+
 input, textarea, select {
   font-family: var(--font);
   outline: none;
-  transition: border-color .2s, box-shadow .2s;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  transition: border-color .2s var(--ease), box-shadow .2s var(--ease), background .2s var(--ease);
   color-scheme: dark;
 }
 input:focus, textarea:focus, select:focus {
   border-color: var(--purple) !important;
-  box-shadow: 0 0 0 3px rgba(124,110,255,.2);
+  background: var(--surface-3);
+  box-shadow: 0 0 0 3.5px rgba(94,106,210,.16);
 }
+input::placeholder, textarea::placeholder { color: var(--text-3); }
 
-::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-3); }
 
 @keyframes fadeIn     { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:none } }
 @keyframes fadeInDown { from { opacity:0; transform:translateY(-10px) } to { opacity:1; transform:none } }
@@ -99,16 +150,16 @@ input:focus, textarea:focus, select:focus {
 .slide-up     { animation: fadeIn .3s ease-out both; }
 
 .gradient-text {
-  background: linear-gradient(135deg, var(--purple-dk), #C4B5FD 50%, var(--green-dk));
+  background: linear-gradient(135deg, var(--purple-dk), #B4BBEF 50%, var(--green-dk));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .glass {
-  background: rgba(17,15,38,.7);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: rgba(18,21,31,.72);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
   border: 1px solid var(--border);
 }
 
@@ -117,11 +168,15 @@ input:focus, textarea:focus, select:focus {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
+  transition: border-color .2s var(--ease), box-shadow .25s var(--ease), transform .2s var(--ease);
+}
+.card:hover {
+  border-color: var(--border-2);
 }
 
 .divine-card {
-  background: linear-gradient(135deg, rgba(124,110,255,.12), rgba(16,217,138,.06));
-  border: 1px solid rgba(124,110,255,.3);
+  background: linear-gradient(150deg, rgba(94,106,210,.08), rgba(20,184,166,.04));
+  border: 1px solid rgba(94,106,210,.22);
   border-radius: var(--radius);
   position: relative;
   overflow: hidden;
@@ -131,12 +186,12 @@ input:focus, textarea:focus, select:focus {
   position: absolute;
   top: -50%; right: -50%;
   width: 200%; height: 200%;
-  background: radial-gradient(circle at center, rgba(124,110,255,.05) 0%, transparent 60%);
+  background: radial-gradient(circle at center, rgba(94,106,210,.05) 0%, transparent 60%);
   pointer-events: none;
 }
 
 .cert-frame {
-  background: linear-gradient(145deg, #1A1740, #0D0B1E);
+  background: linear-gradient(145deg, #181C29, #0E111A);
   border: 2px solid transparent;
   border-radius: 20px;
   background-clip: padding-box;
@@ -146,7 +201,7 @@ input:focus, textarea:focus, select:focus {
   content: '';
   position: absolute; inset: -2px;
   border-radius: 22px;
-  background: linear-gradient(135deg, #7C6EFF, #10D98A, #7C6EFF);
+  background: linear-gradient(135deg, #5E6AD2, #14B8A6, #5E6AD2);
   z-index: -1;
 }
 
@@ -198,7 +253,7 @@ input:focus, textarea:focus, select:focus {
     position: fixed !important; inset: 0 !important;
     width: 100vw !important; height: 100vh !important;
     padding: 20mm !important;
-    background: #080714 !important;
+    background: #0B0E14 !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
