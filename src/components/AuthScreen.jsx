@@ -51,7 +51,7 @@ export default function AuthScreen({ onSuccess }) {
           <div style={{
             width: 56, height: 56, margin: "0 auto 14px",
             borderRadius: 16,
-            background: "linear-gradient(135deg, var(--purple) 0%, #A78BFA 100%)",
+            background: "linear-gradient(135deg, var(--purple) 0%, #8B95E8 100%)",
             display: "flex", alignItems: "center", justifyContent: "center",
             fontSize: 28, boxShadow: "var(--shadow-md)",
           }}>⊞</div>
@@ -103,7 +103,7 @@ export default function AuthScreen({ onSuccess }) {
           {error && (
             <div style={{
               padding: "10px 14px", borderRadius: "var(--radius-sm)",
-              background: "rgba(239,68,68,.1)", color: "#FCA5A5",
+              background: "rgba(239,68,68,.1)", color: "#F1A9A9",
               fontSize: 12, fontWeight: 500,
               border: "1px solid rgba(239,68,68,.25)",
             }}>⚠ {error}</div>
@@ -116,7 +116,7 @@ export default function AuthScreen({ onSuccess }) {
               borderRadius: "var(--radius-sm)", border: "none",
               background: loading
                 ? "var(--border-2)"
-                : "linear-gradient(135deg, var(--purple) 0%, #A78BFA 100%)",
+                : "linear-gradient(135deg, var(--purple) 0%, #8B95E8 100%)",
               color: "#fff", fontSize: 14, fontWeight: 600,
               boxShadow: loading ? "none" : "var(--shadow-md)",
               display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
