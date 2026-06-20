@@ -2,10 +2,10 @@ import { useState } from "react";
 import { uid } from "../utils/helpers";
 
 const Q = [
-  { key: "q1", badge: "Q1", label: "افعلها الآن",   title: "عاجل ومهم",         icon: "🔥", c: "#EF4444", lt: "#3B0A0A", dk: "#FCA5A5", hint: "ركّز عليها فوراً" },
-  { key: "q2", badge: "Q2", label: "خطّط ليها",     title: "مهم · مش عاجل",     icon: "📅", c: "#6C63FF", lt: "var(--purple-lt)", dk: "var(--purple-dk)", hint: "جدوّلها بوقت محدد" },
-  { key: "q3", badge: "Q3", label: "فوّضها",         title: "عاجل · مش مهم",     icon: "🤝", c: "#F59E0B", lt: "var(--amber-lt)", dk: "var(--amber-dk)", hint: "فوّضها لحد تاني" },
-  { key: "q4", badge: "Q4", label: "احذفها",         title: "مش عاجل · مش مهم",  icon: "🗑", c: "#94A3B8", lt: "var(--slate-lt)", dk: "var(--slate-dk)", hint: "استغنّ عنها" },
+  { key: "q1", badge: "Q1", label: "افعلها الآن",   title: "عاجل ومهم",         icon: "🔥", c: "#EF4444", lt: "#3B0A0A", dk: "#F1A9A9", hint: "ركّز عليها فوراً" },
+  { key: "q2", badge: "Q2", label: "خطّط ليها",     title: "مهم · مش عاجل",     icon: "📅", c: "#5E6AD2", lt: "var(--purple-lt)", dk: "var(--purple-dk)", hint: "جدوّلها بوقت محدد" },
+  { key: "q3", badge: "Q3", label: "فوّضها",         title: "عاجل · مش مهم",     icon: "🤝", c: "#F0B429", lt: "var(--amber-lt)", dk: "var(--amber-dk)", hint: "فوّضها لحد تاني" },
+  { key: "q4", badge: "Q4", label: "احذفها",         title: "مش عاجل · مش مهم",  icon: "🗑", c: "#8B92A8", lt: "var(--slate-lt)", dk: "var(--slate-dk)", hint: "استغنّ عنها" },
 ];
 
 export default function EisenhowerMatrix({ tasks, onDone, onAdd, onDelete }) {
@@ -37,7 +37,7 @@ export default function EisenhowerMatrix({ tasks, onDone, onAdd, onDelete }) {
         <div style={{ flex: 1, minWidth: 100, height: 6, background: "var(--border)", borderRadius: 3, overflow: "hidden" }}>
           <div style={{
             height: "100%", width: pct + "%",
-            background: "linear-gradient(90deg, #EF4444 0%, #6C63FF 50%, #10B981 100%)",
+            background: "linear-gradient(90deg, #EF4444 0%, #5E6AD2 50%, #14B8A6 100%)",
             borderRadius: 3, transition: "width .5s ease",
           }} />
         </div>
