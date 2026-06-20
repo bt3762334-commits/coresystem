@@ -32,8 +32,8 @@ export default function DailyReflection({ streak, completedToday, tasks, reflect
   return (
     <div style={{ maxWidth: 680, margin: "0 auto" }}>
       <div style={{ marginBottom: "1.5rem" }}>
-        <h2 style={{ fontSize: 22, fontWeight: 800, color: "#EAE8FF", margin: 0 }}>التأمل اليومي 📝</h2>
-        <p style={{ color: "#8B87C0", fontSize: 13, marginTop: 4 }}>{todayAr()}</p>
+        <h2 style={{ fontSize: 22, fontWeight: 800, color: "#F1F3F8", margin: 0 }}>التأمل اليومي 📝</h2>
+        <p style={{ color: "#8B92A8", fontSize: 13, marginTop: 4 }}>{todayAr()}</p>
       </div>
 
       {/* Day summary */}
@@ -49,8 +49,8 @@ export default function DailyReflection({ streak, completedToday, tasks, reflect
             background: "rgba(17,15,38,.8)", border: "1px solid rgba(124,110,255,.2)",
             borderRadius: 12, padding: "1rem", textAlign: "center",
           }}>
-            <div style={{ fontSize: 22, fontWeight: 800, color: "#EAE8FF" }}>{s.val}</div>
-            <div style={{ fontSize: 11, color: "#8B87C0", marginTop: 3 }}>{s.label}</div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: "#F1F3F8" }}>{s.val}</div>
+            <div style={{ fontSize: 11, color: "#8B92A8", marginTop: 3 }}>{s.label}</div>
           </div>
         ))}
       </div>
@@ -63,7 +63,7 @@ export default function DailyReflection({ streak, completedToday, tasks, reflect
         <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
           {QUESTIONS.map(q => (
             <div key={q.key}>
-              <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#A89BFF", marginBottom: 8 }}>{q.label}</label>
+              <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#8B95E8", marginBottom: 8 }}>{q.label}</label>
               <textarea
                 value={form[q.key] || ""}
                 onChange={e => setForm(p => ({ ...p, [q.key]: e.target.value }))}
@@ -72,7 +72,7 @@ export default function DailyReflection({ streak, completedToday, tasks, reflect
                 style={{
                   width: "100%", padding: "10px 14px", borderRadius: 10, resize: "vertical",
                   background: "rgba(255,255,255,.05)", border: "1px solid rgba(124,110,255,.2)",
-                  color: "#EAE8FF", fontSize: 13, lineHeight: 1.7,
+                  color: "#F1F3F8", fontSize: 13, lineHeight: 1.7,
                 }}
               />
             </div>
@@ -81,9 +81,9 @@ export default function DailyReflection({ streak, completedToday, tasks, reflect
 
         <button onClick={save} style={{
           marginTop: 16, width: "100%", padding: "12px",
-          background: saved ? "rgba(16,217,138,.2)" : "linear-gradient(135deg, #6C63FF, #4338CA)",
+          background: saved ? "rgba(16,217,138,.2)" : "linear-gradient(135deg, #5E6AD2, #3F47A6)",
           border: saved ? "1px solid rgba(16,217,138,.4)" : "none",
-          borderRadius: 12, color: saved ? "#10D98A" : "#fff",
+          borderRadius: 12, color: saved ? "#14B8A6" : "#fff",
           fontSize: 15, fontWeight: 700,
           transition: "all .3s",
         }}>
@@ -94,16 +94,16 @@ export default function DailyReflection({ streak, completedToday, tasks, reflect
       {/* Past reflections */}
       {pastEntries.length > 0 && (
         <div>
-          <p style={{ fontSize: 13, fontWeight: 700, color: "#8B87C0", marginBottom: 10 }}>تأملات سابقة</p>
+          <p style={{ fontSize: 13, fontWeight: 700, color: "#8B92A8", marginBottom: 10 }}>تأملات سابقة</p>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {pastEntries.map(([date, entry]) => (
               <div key={date} style={{
                 background: "rgba(17,15,38,.6)", border: "1px solid rgba(124,110,255,.15)",
                 borderRadius: 12, padding: "1rem",
               }}>
-                <p style={{ fontSize: 11, color: "#6C63FF", fontWeight: 700, marginBottom: 8 }}>{date}</p>
-                {entry.achieved && <p style={{ fontSize: 13, color: "#C4C0FF", marginBottom: 4 }}>🎯 {entry.achieved}</p>}
-                {entry.grateful && <p style={{ fontSize: 13, color: "#C4E8D8" }}>🤲 {entry.grateful}</p>}
+                <p style={{ fontSize: 11, color: "#5E6AD2", fontWeight: 700, marginBottom: 8 }}>{date}</p>
+                {entry.achieved && <p style={{ fontSize: 13, color: "#C7CCF0", marginBottom: 4 }}>🎯 {entry.achieved}</p>}
+                {entry.grateful && <p style={{ fontSize: 13, color: "#BFE8E0" }}>🤲 {entry.grateful}</p>}
               </div>
             ))}
           </div>
