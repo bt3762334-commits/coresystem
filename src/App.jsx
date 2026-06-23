@@ -72,14 +72,26 @@ function AuthenticatedApp({ session, setSession, tab, setTab }) {
   }, []);
 
   const handleAdd = useCallback((q, task) => {
-    setTasks((prev) => ({ ...prev, [q]: [...prev[q], task] }));
+    setTasks((prev) => {
+      // Prevent duplicates
+      const exists = (prev[q] || []).some(t => t.text.trim().toLowerCase() === task.text.trim().toLowerCase());
+      if (exists) return prev;
+      return { ...prev, [q]: [...(prev[q] || []), task] };
+    });
   }, []);
 
   const handleAddMany = useCallback((distributed) => {
     setTasks((prev) => {
-      const next = { ...prev };
+      const next = { q1: [...prev.q1], q2: [...prev.q2], q3: [...prev.q3], q4: [...prev.q4] };
       Object.entries(distributed).forEach(([q, items]) => {
-        next[q] = [...(next[q] || []), ...items];
+        if (!items || items.length === 0) return;
+        items.forEach((item) => {
+          // Prevent duplicates
+          const exists = next[q].some(t => t.text.trim().toLowerCase() === item.text.trim().toLowerCase());
+          if (!exists) {
+            next[q] = [...next[q], item];
+          }
+        });
       });
       return next;
     });
@@ -87,6 +99,31 @@ function AuthenticatedApp({ session, setSession, tab, setTab }) {
 
   const handleDelete = useCallback((q, id) => {
     setTasks((prev) => ({ ...prev, [q]: prev[q].filter((t) => t.id !== id) }));
+  }, []);
+
+  // Edit task: supports moving to a different quadrant
+  const handleEdit = useCallback((originalQ, updatedTask, newQ) => {
+    setTasks((prev) => {
+      const next = {
+        q1: [...prev.q1],
+        q2: [...prev.q2],
+        q3: [...prev.q3],
+        q4: [...prev.q4],
+      };
+
+      if (originalQ === newQ) {
+        // Same quadrant: just update
+        next[originalQ] = next[originalQ].map(t =>
+          t.id === updatedTask.id ? { ...t, ...updatedTask } : t
+        );
+      } else {
+        // Different quadrant: remove from old, add to new
+        next[originalQ] = next[originalQ].filter(t => t.id !== updatedTask.id);
+        next[newQ] = [...next[newQ], { ...updatedTask }];
+      }
+
+      return next;
+    });
   }, []);
 
   function updateStreak() {
@@ -123,7 +160,7 @@ function AuthenticatedApp({ session, setSession, tab, setTab }) {
       {/* Header */}
       <header className="app-header glass" style={{
         position: "sticky", top: 0, zIndex: 50,
-        background: "rgba(10,12,18,.78)",
+        background: "rgba(10,12,18,.85)",
         backdropFilter: "blur(20px) saturate(140%)",
         WebkitBackdropFilter: "blur(20px) saturate(140%)",
         borderBottom: "1px solid var(--border)",
@@ -134,20 +171,20 @@ function AuthenticatedApp({ session, setSession, tab, setTab }) {
           {/* Top row */}
           <div className="app-top" style={{
             display: "flex", alignItems: "center", justifyContent: "space-between",
-            height: 68, gap: 12,
+            height: 64, gap: 12,
           }}>
             {/* Logo */}
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
               <div style={{
-                width: 40, height: 40, borderRadius: 12,
+                width: 38, height: 38, borderRadius: 10,
                 background: "linear-gradient(145deg, var(--purple), #4F5BC4)",
                 boxShadow: "0 4px 16px rgba(94,106,210,.35)",
                 display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 18, flexShrink: 0, color: "#fff",
+                fontSize: 17, color: "#fff",
               }}>⊞</div>
               <div>
-                <div style={{ fontSize: 16.5, fontWeight: 800, color: "var(--text)", letterSpacing: "-0.01em" }}>Core System</div>
-                <div style={{ fontSize: 10, fontWeight: 600, color: "var(--text-3)", letterSpacing: ".06em" }}>AI PRODUCTIVITY OS</div>
+                <div style={{ fontSize: 15.5, fontWeight: 800, color: "var(--text)", letterSpacing: "-0.01em" }}>Core System</div>
+                <div style={{ fontSize: 9.5, fontWeight: 600, color: "var(--text-3)", letterSpacing: ".07em" }}>AI PRODUCTIVITY OS</div>
               </div>
             </div>
 
@@ -166,17 +203,17 @@ function AuthenticatedApp({ session, setSession, tab, setTab }) {
               ))}
               <div style={{ display: "flex", alignItems: "center", gap: 8, paddingInlineStart: 8, borderInlineStart: "1px solid var(--border)" }}>
                 <div style={{
-                  width: 34, height: 34, borderRadius: "50%",
+                  width: 32, height: 32, borderRadius: "50%",
                   background: "linear-gradient(145deg, var(--purple), #4F5BC4)",
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  color: "#fff", fontSize: 14, fontWeight: 700,
+                  color: "#fff", fontSize: 13, fontWeight: 700, flexShrink: 0,
                 }}>{session.avatar}</div>
                 <div style={{ display: "flex", flexDirection: "column" }}>
                   <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>{session.name}</span>
                   <button onClick={handleLogout} style={{
                     background: "none", border: "none", padding: 0,
                     fontSize: 10, color: "var(--text-3)",
-                    textAlign: "start",
+                    textAlign: "start", cursor: "pointer",
                   }}>تسجيل خروج</button>
                 </div>
               </div>
@@ -198,7 +235,7 @@ function AuthenticatedApp({ session, setSession, tab, setTab }) {
           <nav className="app-nav-desktop" style={{ display: "flex", gap: 2, overflowX: "auto" }}>
             {NAV.map((n) => (
               <button key={n.id} onClick={() => setTab(n.id)} style={{
-                padding: "10px 18px", border: "none",
+                padding: "10px 16px", border: "none",
                 background: "transparent",
                 fontSize: 13, fontWeight: tab === n.id ? 700 : 500,
                 color: tab === n.id ? "var(--text)" : "var(--text-3)",
@@ -211,7 +248,6 @@ function AuthenticatedApp({ session, setSession, tab, setTab }) {
             ))}
           </nav>
         </div>
-
       </header>
 
       {/* Mobile bottom nav */}
@@ -225,16 +261,15 @@ function AuthenticatedApp({ session, setSession, tab, setTab }) {
           }}>
             <span style={{ fontSize: 20, lineHeight: 1 }}>{n.icon}</span>
             <span style={{
-              fontSize: 9.5, fontWeight: tab === n.id ? 700 : 400,
+              fontSize: 9, fontWeight: tab === n.id ? 700 : 400,
               whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
-              maxWidth: 52,
+              maxWidth: 50,
             }}>{n.label}</span>
             {tab === n.id && (
               <span style={{
                 width: 4, height: 4, borderRadius: "50%",
                 background: "var(--purple)", display: "block",
               }} />
-
             )}
           </button>
         ))}
@@ -245,18 +280,50 @@ function AuthenticatedApp({ session, setSession, tab, setTab }) {
         maxWidth: 1200, margin: "0 auto", padding: "1.25rem 1rem",
       }}>
         <div key={tab} className="fade-in">
-          {tab === "matrix"       && <EisenhowerMatrix tasks={tasks} onDone={handleDone} onAdd={handleAdd} onDelete={handleDelete} />}
+          {tab === "matrix"       && (
+            <EisenhowerMatrix
+              tasks={tasks}
+              onDone={handleDone}
+              onAdd={handleAdd}
+              onDelete={handleDelete}
+              onEdit={handleEdit}
+            />
+          )}
           {tab === "pomodoro"     && <PomodoroTimer tasks={allTasks.filter(t => !t.done)} onComplete={updateStreak} session={session} />}
           {tab === "coach"        && <AICoach tasks={tasks} streak={streak} completedToday={activeCT} onDistributeTasks={handleAddMany} />}
           {tab === "analytics"    && <Analytics tasks={tasks} streak={streak} completedToday={activeCT} />}
-          {tab === "certificates" && <Certificates session={session} tasks={tasks} streak={streak} completedToday={activeCT} certificates={certificates} onIssue={cert => setCertificates(p => [cert, ...p])} />}
-          {tab === "reflection"   && <DailyReflection streak={streak} completedToday={activeCT} tasks={allTasks} reflections={reflections} setReflections={setReflections} />}
+          {tab === "certificates" && (
+            <Certificates
+              session={session}
+              tasks={tasks}
+              streak={streak}
+              completedToday={activeCT}
+              certificates={certificates}
+              onIssue={cert => setCertificates(p => [cert, ...p])}
+            />
+          )}
+          {tab === "reflection"   && (
+            <DailyReflection
+              streak={streak}
+              completedToday={activeCT}
+              tasks={allTasks}
+              reflections={reflections}
+              setReflections={setReflections}
+            />
+          )}
         </div>
       </main>
 
       <Footer />
 
       <style>{`
+        .fade-in {
+          animation: fadeInUp .25s ease both;
+        }
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(10px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
         @media (max-width: 720px) {
           .app-pills-desktop { display: none !important; }
           .app-nav-desktop   { display: none !important; }
@@ -265,32 +332,22 @@ function AuthenticatedApp({ session, setSession, tab, setTab }) {
             display: flex !important;
             position: fixed; bottom: 0; left: 0; right: 0;
             z-index: 100;
-            background: rgba(10, 12, 18, 0.92);
+            background: rgba(10, 12, 18, 0.94);
             backdrop-filter: blur(20px) saturate(140%);
+            -webkit-backdrop-filter: blur(20px) saturate(140%);
             border-top: 1px solid var(--border);
-            box-shadow: 0 -4px 24px rgba(0,0,0,0.4);
-            height: 62px;
+            box-shadow: 0 -4px 24px rgba(0,0,0,.45);
+            height: 60px;
             padding-bottom: env(safe-area-inset-bottom, 0px);
           }
-          .app-main { padding-bottom: 74px !important; }
+          .app-main { padding-bottom: 72px !important; }
         }
         @media (min-width: 721px) {
-          .app-mobile-right  { display: none !important; }
-          .app-bottom-nav    { display: none !important; }
+          .app-mobile-right { display: none !important; }
+          .app-bottom-nav   { display: none !important; }
         }
         @media (max-width: 480px) {
-          .app-main { padding: 1rem .75rem 74px !important; }
-        }
-        @media (max-width: 720px) {
-          .matrix-grid > div { grid-column: 1 !important; grid-row: auto !important; }
-          .matrix-grid > div:nth-child(3) {
-            writing-mode: horizontal-tb !important;
-            transform: none !important;
-            border-inline-end: none !important;
-            border-bottom: 2px solid var(--border);
-            padding-inline-end: 0 !important;
-            padding: 8px 0;
-          }
+          .app-main { padding: .875rem .625rem 72px !important; }
         }
       `}</style>
     </div>
